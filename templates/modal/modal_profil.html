@@ -1,0 +1,55 @@
+
+{% include 'modal/modal_edit_profil.html' %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modal_edit_profil.css') }}">
+
+<!-- Modal Profil -->
+<div class="modal fade" id="modalProfil" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered "   >
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <button type="button" class="btn-close bg-light" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="text-center mb-3">
+          <img src="{{ url_for('static', filename='img/' ~ user.foto) }}" class="rounded-circle shadow-sm" alt="Foto Profil" width="100" height="100">
+        </div>
+
+        <table class="table table-borderless">
+          <tbody>
+            <tr>
+              <th scope="row" style="width: 40%;">Nama</th>
+              <td>{{ user.nama_siswa }}</td>
+            </tr>
+            <tr>
+              <th scope="row">NIS</th>
+              <td>{{ user.nis }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Jurusan</th>
+              <td>{{ user.jurusan }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Kelas</th>
+              <td>{{ user.kelas }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Email</th>
+              <td>{{ user.email }}</td>
+            </tr>
+            <tr>
+              <th scope="row">No. HP</th>
+              <td>{{ user.no_hp }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="text-end">
+            <a href="" data-bs-toggle="modal" data-bs-target="#modalEditProfil" class="btn btn-sm btn-warna">Edit Profil</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

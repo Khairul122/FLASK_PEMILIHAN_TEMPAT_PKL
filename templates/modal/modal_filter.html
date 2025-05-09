@@ -1,0 +1,71 @@
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modal_filter.css') }}">
+
+<form method="POST" action="">
+  <div class="modal fade" id="staticBackdrop" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+
+          <div class="mt-3">
+            <label class="form-label">Bidang Keahlian</label>
+            <select class="form-select" name="bidang_keahlian">
+              <option value="">Pilih Bidang</option>
+              <option value="jaringan">Jaringan</option>
+              <option value="administrasi">Administrasi</option>
+              <option value="multimedia">Multimedia</option>
+            </select>
+          </div>
+
+          <div class="mt-3">
+            <label class="form-label">Durasi PKL</label>
+            <select class="form-select" name="durasi_pkl">
+              <option value="">Pilih Durasi</option>
+              <option value="3">2 Bulan 3x Minggu</option>
+              <option value="4">2 Bulan 4x Minggu</option>
+              <option value="5">2 Bulan 5x Minggu</option>
+              <option value="6">2 Bulan 6x Minggu</option>
+            </select>
+          </div>
+
+          <div class="mt-3">
+            <label class="form-label">Fasilitas</label>
+            {% for fasilitas in ['komputer', 'internet', 'perangkat jaringan', 'printer', 'scanner'] %}
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="{{ fasilitas }}" value="{{ fasilitas }}" name="fasilitas">
+              <label class="form-check-label" for="{{ fasilitas }}">{{ fasilitas.capitalize() }}</label>
+            </div>
+            {% endfor %}
+          </div>
+
+          <div class="mt-3">
+            <label class="form-label">Kuota</label>
+            <select class="form-select" name="kuota">
+              <option value="">Pilih Kuota</option>
+              <option value="1">Sedikit</option>
+              <option value="2">Sedang</option>
+              <option value="3">Banyak</option>
+            </select>
+          </div>
+
+          <div class="mt-3">
+            <label class="form-label">Jarak</label>
+            <select class="form-select" name="jarak">
+              <option value="">Pilih Jarak</option>
+              <option value="1">Dekat (&le; 1 km)</option>
+              <option value="2">Sedang (1–5 km)</option>
+              <option value="3">Jauh (&gt; 5 km)</option>
+            </select>
+          </div>
+
+          <div class="mt-3 text-end">
+            <button type="submit" class="btn btn-warna-filter btn-sm">Rekomendasi</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>

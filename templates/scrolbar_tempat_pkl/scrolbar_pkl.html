@@ -1,0 +1,26 @@
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/scrolbar_pkl.css') }}">
+
+ 
+
+    <!-- Single Slide -->
+   
+      <div class="d-flex flex-nowrap overflow-auto gap-3 mt-3 ">
+        {% for tempat in data_tempat_pkl %}
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-3">
+            <div class="card card-img">
+                <img src="{{ url_for('static', filename='img/' ~ tempat.foto) }}" class="card-img-top" alt="foto">
+                <div class="card-body">
+                    <h5 class="card-title">{{ tempat.nama_tempat }}</h5>
+                    <p class="card-text mb-0">Institusi : {{ tempat.institusi }}</p>
+                    <p class="card-text mb-0">Bidang : {{ tempat.bidang }}</p>
+                    <p class="card-text mb-1">Kuota : {{ tempat.kuota }}</p>
+                    <a href="{{ url_for('tempat_pkl_siswa_routes.detail_tempat_pkl', id=tempat.id) }}" class="btn btn-lihat-detail">Lihat Detail</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+</div>
+    
+ 

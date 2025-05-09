@@ -1,0 +1,116 @@
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modal_masuk.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- Modal Daftar -->
+<div class="modal fade" id="modalDaftar" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalLabel">Daftar</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form action="{{ url_for('auth.daftar') }}" method="post">
+          <div class="mb-3">
+            <label for="peran" class="form-label">Pilih Peran</label>
+            <select id="peran" name="peran" class="form-select form-control" required>
+              <option selected disabled>Pilih Peran</option>
+              <option value="siswa">Siswa</option>
+              <option value="mitra">Mitra</option>
+            </select>
+          </div>
+
+          <!-- Siswa Fields -->
+          <div id="siswaFields" style="display: none;">
+            <div class="mb-3">
+              <label for="nama_siswa" class="form-label">Nama Siswa</label>
+              <input type="text" class="form-control" id="nama_siswa" name="nama_siswa">
+            </div>
+            <div class="mb-3">
+              <label for="nis" class="form-label">NIS</label>
+              <input type="number" class="form-control" id="nis" name="nis">
+            </div>
+            <div class="mb-3">
+              <label for="jurusan" class="form-label">Jurusan</label>
+              <input type="text" class="form-control" id="jurusan" name="jurusan">
+            </div>
+            <div class="mb-3">
+              <label for="kelas" class="form-label">Kelas</label>
+              <input type="text" class="form-control" id="kelas" name="kelas">
+            </div>
+          </div>
+
+          <!-- Mitra Fields -->
+          <div id="mitraFields" style="display: none;">
+            <div class="mb-3">
+              <label for="nama_perusahaan" class="form-label">Nama Perusahaan</label>
+              <input type="text" class="form-control" id="nama_perusahaan" name="nama_perusahaan">
+            </div>
+            <div class="mb-3">
+              <label for="institusi" class="form-label">Institusi</label>
+              <select id="institusi" name="institusi" class="form-select form-control">
+                <option selected disabled>Pilih Institusi</option>
+                <option value="swasta">Swasta</option>
+                <option value="pemerintah">Pemerintah</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="alamat" class="form-label">Alamat</label>
+              <input type="text" class="form-control" id="alamat" name="alamat">
+            </div>
+            <div class="mb-3">
+              <label for="no_hp" class="form-label">No HP</label>
+              <input type="text" class="form-control" id="no_hp" name="no_hp">
+            </div>
+          </div>
+
+          <!-- Umum (email & password) -->
+          <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" name="email" required>
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+          </div>
+
+          <button type="submit" class="btn btn-warna">Submit</button>
+        </form>
+
+        <div class="title mt-3">
+          <p class="mb-0">
+            Sudah punya akun?
+            <a href="#" data-bs-toggle="modal" data-bs-target="#modalMasuk">Login</a>
+          </p>
+          <p class="mb-0">Lupa Password? <a href="#">Reset</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('peran').addEventListener('change', function() {
+  var siswaFields = document.getElementById('siswaFields');
+  var mitraFields = document.getElementById('mitraFields');
+  
+  if (this.value === 'siswa') {
+    siswaFields.style.display = 'block';
+    mitraFields.style.display = 'none';
+    siswaFields.querySelectorAll('input, select').forEach(el => el.required = true);
+    mitraFields.querySelectorAll('input, select').forEach(el => el.required = false);
+  } else if (this.value === 'mitra') {
+    siswaFields.style.display = 'none';
+    mitraFields.style.display = 'block';
+    siswaFields.querySelectorAll('input, select').forEach(el => el.required = false);
+    mitraFields.querySelectorAll('input, select').forEach(el => el.required = true);
+  } else {
+    siswaFields.style.display = 'none';
+    mitraFields.style.display = 'none';
+    siswaFields.querySelectorAll('input, select').forEach(el => el.required = false);
+    mitraFields.querySelectorAll('input, select').forEach(el => el.required = false);
+  }
+});
+</script>
+
+{% include 'alert/sweetalert_flash.html' %}

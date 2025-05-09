@@ -1,0 +1,29 @@
+.form-control{
+
+    border: #003834  1px solid;
+    }
+    .form-control:active,
+    .form-control:focus {
+      border: #003834  1px solid;
+     box-shadow: none !important;
+    }
+    
+    .form-control:hover {
+      background-color: #55555537;
+    }
+
+   
+    .btn-warna {
+      background-color: #00B298 !important;
+      color: white !important;
+      font-weight: 600;
+      width: auto !important;  /* Tambahkan baris ini */
+      padding: 5px 15px; /* Atur padding biar enak dilihat */
+    }
+    
+      
+    .btn-warna:hover {
+        background-color: #07907b !important; /* Pastikan warna tetap konsisten */
+        transition: 1s ;
+        
+    }

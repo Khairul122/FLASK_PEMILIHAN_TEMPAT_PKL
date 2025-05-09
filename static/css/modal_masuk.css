@@ -1,0 +1,65 @@
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    
+}
+.modal-header{
+    border-bottom: none;
+}
+/* Pastikan modal-title berada di tengah */
+.modal-title {
+
+  text-align: center;       /* Teks berada di tengah */
+  flex: 1;                  /* Memastikan judul modal mengambil ruang yang sesuai */
+  font-size: 50px;
+  font-weight: bold;
+  color: #003834;
+}
+
+.btn-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+}
+
+.btn-warna{
+width: 100%;
+background-color: #00B298;
+color: white !important;
+font-weight: 600;
+ 
+}
+
+
+.btn-warna:focus, 
+.btn-warna:active {
+    background-color: #00B298 !important; /* Pastikan warna tetap konsisten */
+    color: white !important;
+}
+.btn-warna:hover {
+    background-color: #07907b !important; /* Pastikan warna tetap konsisten */
+    transition: 1s ;
+    
+}
+
+.title{
+    text-align: center;
+   
+
+
+}
+
+
+.form-control{
+
+    border: #003834  1px solid;
+    }
+    .form-control:active,
+    .form-control:focus {
+      border: #003834  1px solid;
+     box-shadow: none !important;
+    }
+    
+    .form-control:hover {
+      background-color: #55555537;
+    }

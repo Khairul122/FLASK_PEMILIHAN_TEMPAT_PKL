@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+<script src="{{ url_for('static', filename='alert/alert.js') }}"></script>
+<div class="wrapper d-flex">
+  <!-- Sidebar -->
+  <nav class="sidebar text-white" id="sidebar">
+    <div class="sidebar-header p-3 border-bottom">
+      <h4 class="text-white">Admin Panel</h4>
+    </div>
+    <ul class="list-unstyled p-3">
+      <li class="mb-2"><a href="{{ url_for('admin') }}" class="text-white d-block "><i class="fas fa-home me-2"></i>Dashboard</a></li>
+      <li class="mb-2"><a href="{{ url_for('data_siswa') }}" class="text-white d-block "><i class="fas fa-user-graduate me-2"></i> Data Siswa</a></li>
+      <li class="mb-2"><a href="{{ url_for('data_mitra') }}" class="text-white d-block "><i class="fas fa-handshake me-2"></i>Data Mitra</a></li>
+      <li class="mb-2"><a href="{{ url_for('siswa_pkl') }}" class="text-white d-block "><i class="fas fa-user-graduate me-2"></i>Siswa PKL</a></li>
+      <li class="mb-2"><a href="{{ url_for('siswa_selesai_pkl') }}" class="text-white d-block"><i class="fas fa-user-graduate me-2"></i>Selesai PKL</a></li>
+    </ul>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main-content flex-grow-1">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-4">
+      <button class="btn btn-outline-secondary d-lg-none me-2" id="toggleSidebar">☰</button>
+      <span class="navbar-brand mb-0 h5">Profile</span>
+      <div class="ms-auto d-flex align-items-center">
+        <div class="dropdown">
+          <a class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" href="#" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+            <img src="{{ url_for('static', filename='img/' ~ user.foto) }}" alt="profile" width="32" height="32" class="rounded-circle me-2">
+            <strong>Admin Rizky</strong>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownUser1">
+            <li><a class="dropdown-item" href="{{ url_for('profil_admin') }}">Profil</a></li>
+            <li><a class="dropdown-item" href="#">Pengaturan</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">Keluar</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="container mt-4 px-4">
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="card-title mb-4">Profil Admin</h5>
+          <div class="row">
+            
+            <div class="col-md-9">
+                <form method="POST" action="{{ url_for('profil.edit_profil_admin') }}" enctype="multipart/form-data">
+                    <div class="mb-3 row">
+                      <label for="foto" class="col-sm-2 col-form-label">Foto</label>
+                      <div class="col-sm-10">
+                        <input type="file" class="form-control" name="foto" id="foto">
+                      </div>
+                    </div>
+                    <div class="mb-3 row">
+                      <label for="nama" class="col-sm-2 col-form-label">Nama</label>
+                      <div class="col-sm-10">
+                        <input type="text" class="form-control" name="nama" id="nama" value="{{ user.nama }}">
+                      </div>
+                    </div>
+                    <div class="mb-3 row">
+                      <label for="email" class="col-sm-2 col-form-label">Email</label>
+                      <div class="col-sm-10">
+                        <input type="email" class="form-control" name="email" id="email" value="{{ user.email }}">
+                      </div>
+                    </div>
+                    <div class="mb-3 row">
+                      <label for="no_hp" class="col-sm-2 col-form-label">No Hp</label>
+                      <div class="col-sm-10">
+                        <input type="text" class="form-control" name="no_hp" id="no_hp" value="{{ user.no_hp }}">
+                      </div>
+                    </div>
+                    <div class="text-end">
+                      <button type="submit" class="btn btn-warna">Simpan</button>
+                    </div>
+                  </form>
+                  
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Sidebar Toggle Script -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const toggleBtn = document.getElementById("toggleSidebar");
+    const sidebar = document.getElementById("sidebar");
+    toggleBtn.addEventListener("click", () => {
+      sidebar.classList.toggle("active");
+    });
+  });
+</script>
+{% endblock %}

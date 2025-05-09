@@ -1,0 +1,15 @@
+
+.btn-warna-filter {
+    background-color: #00B298 !important;
+    color: white !important;
+    font-weight: 600;
+    width: auto !important;  /* Tambahkan baris ini */
+    padding: 5px 15px; /* Atur padding biar enak dilihat */
+  }
+  
+    
+  .btn-warna-filter:hover {
+      background-color: #07907b !important; /* Pastikan warna tetap konsisten */
+      transition: 1s ;
+      
+  }

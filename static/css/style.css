@@ -1,0 +1,96 @@
+
+.card{
+    /* z-index: -1; */
+    background-color: transparent;
+   
+     height: 700px;
+    
+}
+
+.card > img{
+ 
+    height: 100%;
+    object-fit: cover;
+    
+   
+}
+
+.text {
+    margin-top: -400px;
+   /* background-color: aqua; */
+    
+}
+
+.text > h1{
+    color: rgb(255, 255, 255);
+    font-size: 70px;
+    font-weight: 900;
+    
+}
+.text > p{
+    color: rgb(255, 255, 255);
+    /* font-size: 70px; */
+    font-weight: 700;
+}
+
+
+.btn-cari-tempat-pkl{
+ border-radius: 12px;
+background-color: #00B298 !important;
+ color: rgb(255, 255, 255);
+ font-weight: 600;
+  outline: none; /* Menghapus outline saat tombol di-fokuskan */
+}
+
+.btn-cari-tempat-pkl:focus{
+ color: rgb(255, 255, 255) !important;
+}
+
+.btn-cari-tempat-pkl:hover{
+color: rgb(255, 255, 255);
+background-color: #028d78 !important;
+transition: 0.4s;
+}
+.card-btn{
+     display: flex;
+    gap: 10px; /* Jarak antar tombol */
+    
+    
+}
+.card-btn > .btn-light{
+   color: #003834 !important;
+   font-weight: 600;
+    border-radius: 12px;
+}
+
+
+
+
+.judul-title > h1{
+   font-weight: 900;
+   color: #003834;
+}
+
+
+
+@media (max-width: 768px) {
+    .card{
+          height: 500px;
+    }
+    .text{
+         margin-top: -350px;
+    }
+    .text > h1 {
+        font-size: 40px !important;
+        
+    }
+    .card-btn {
+        flex-direction: column; /* Ubah orientasi menjadi vertikal */
+       
+    }
+
+    
+
+    
+}
+

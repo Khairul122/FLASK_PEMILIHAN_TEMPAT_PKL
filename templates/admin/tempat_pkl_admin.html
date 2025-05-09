@@ -1,0 +1,112 @@
+
+{% extends "base.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+
+<div class="wrapper d-flex">
+  <!-- Sidebar -->
+  <nav class="sidebar  text-white" id="sidebar">
+    <div class="sidebar-header p-3 border-bottom">
+      <h4 class="text-white">Admin Panel</h4>
+    </div>
+    <ul class="list-unstyled p-3">
+      <li class="mb-2"><a href="{{ url_for('admin') }}" class="text-white d-block">🏠 Dashboard</a></li>
+      <li class="mb-2"><a href="{{ url_for('tempat_pkl_admin') }}" class="text-white d-block">🏢 Tempat PKL Admin</a></li>
+      <li class="mb-2"><a href="{{ url_for('lamaran') }}" class="text-white d-block">📄 Lamaran</a></li>
+      <li class="mb-2"><a href="{{ url_for('data_siswa') }}" class="text-white d-block">👨‍🎓 Data Siswa</a></li>
+      <li class="mb-2"><a href="{{ url_for('data_mitra') }}" class="text-white d-block ">🤝 Data Mitra</a></li>
+      <li class="mb-2"><a href="{{ url_for('siswa_pkl') }}" class="text-white d-block ">📊 Siswa PKL</a></li>
+      <li class="mb-2"><a href="{{ url_for('siswa_selesai_pkl') }}" class="text-white d-block">✅ Selesai PKL</a></li>
+    </ul>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main-content flex-grow-1">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-4">
+      <button class="btn btn-outline-secondary d-lg-none me-2" id="toggleSidebar">☰</button>
+      <span class="navbar-brand mb-0 h5">Tempat Pkl</span>
+      <div class="ms-auto d-flex align-items-center">
+        <div class="dropdown">
+          <a class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" href="#" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+            <img src="{{ url_for('static', filename='img/' ~ user.foto) }}"  alt="profile" width="32" height="32" class="rounded-circle me-2">
+            <strong>Admin Rizky</strong>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownUser1">
+            <li><a class="dropdown-item" href="{{ url_for('profil_admin') }}">Profil</a></li>
+            <li><a class="dropdown-item" href="#">Pengaturan</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">Keluar</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    
+    <!-- Content -->
+    <div class="container-fluid mt-4 px-4">
+      <!-- Table -->
+     <div class="mb-3">
+      <a href="{{ url_for('tambah_tempat_pkl_admin') }}" class="btn btn-sm btn-primary">Tambah</a>
+     </div>
+
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="card-title">Tempat PKL Yang Diupload Admin</h5>
+          <div class="table-responsive">
+            <table class="table table-striped align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>No</th>
+                  <th>Nama Tempat</th>
+                  <th>Institusi</th>
+                  <th>Bidang</th>
+                  <th>Fasilitas</th>
+                  <th>Durasi</th>
+                  <th>Kuota</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Data dummy -->
+                <tr>
+                  <td>1</td>
+                  <td>SMK Digital</td>
+                  <td>Pemerintah</td>
+                  <td>Jaringan</td>
+                  <td>Komputer, Wifi, Printer</td>
+                  <td>2 Bulan, 3x Seminggu</td>
+                  <td>Banyak</td>
+                  <td>
+                    <div class="d-flex gap-2">
+                      <a href="" class="btn btn-sm btn-primary">Edit</a>
+                      <a href="#" class="btn btn-sm btn-danger">Hapus</a>
+                      <a href="#" class="btn btn-sm btn-danger" title="Hapus"><i class="fas fa-trash"></i></a>
+                    </div>
+                  </td>
+                </tr>
+                <!-- Tambahkan data dinamis atau dummy lainnya di sini -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Sidebar Toggle Script -->
+<!-- Sidebar Toggle Script -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const toggleBtn = document.getElementById("toggleSidebar");
+    const sidebar = document.getElementById("sidebar");
+
+    toggleBtn.addEventListener("click", () => {
+      sidebar.classList.toggle("active");
+    });
+  });
+</script>
+
+
+{% endblock %}

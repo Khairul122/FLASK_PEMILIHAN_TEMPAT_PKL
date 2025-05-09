@@ -1,0 +1,149 @@
+body {
+  background-color: #f8f9fa;
+}
+
+/* Wrapper */
+.wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  background: #5e72e4;
+  color: white;
+  transition: all 0.3s;
+}
+
+.sidebar .sidebar-header {
+  padding: 20px;
+  background: #324cdd;
+  text-align: center;
+}
+
+.sidebar ul.components {
+  padding: 20px 0;
+}
+
+.sidebar ul li {
+  padding: 10px 20px;
+}
+
+.sidebar ul li a {
+  color: white;
+  text-decoration: none;
+  display: block;
+}
+
+.sidebar ul li a:hover,
+.sidebar ul li.active > a {
+  background: #3c4dcb;
+  border-radius: 5px;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  padding: 0;
+}
+
+/* Card Styles */
+.card {
+  border-radius: 0.5rem;
+  border: none;
+  transition: 0.3s;
+}
+
+.card-title {
+  font-weight: 600;
+  color: #32325d;
+}
+
+.card h3 {
+  color: #5e72e4;
+}
+
+/* Table Styles */
+.table th,
+.table td {
+  vertical-align: middle;
+}
+
+.table thead th {
+  background-color: #f6f9fc;
+  color: #8898aa;
+  font-weight: 600;
+  border-bottom: 2px solid #e9ecef;
+}
+
+/* Profile Image */
+.navbar .dropdown-toggle img {
+  border-radius: 50%;
+}
+
+/* Button Colors */
+.btn-primary {
+  background-color: #5e72e4;
+  border-color: #5e72e4;
+}
+
+.btn-primary:hover {
+  background-color: #324cdd;
+  border-color: #324cdd;
+}
+
+.btn-warning {
+  background-color: #ff9f43;
+  border-color: #ff9f43;
+}
+
+.btn-warning:hover {
+  background-color: #ff922b;
+  border-color: #ff922b;
+}
+
+.btn-danger {
+  background-color: #f5365c;
+  border-color: #f5365c;
+}
+
+.btn-danger:hover {
+  background-color: #d52c4e;
+  border-color: #d52c4e;
+}
+
+/* Responsive Sidebar */
+@media (max-width: 992px) {
+  .sidebar {
+    position: fixed;
+    height: 100vh;
+    left: -250px;
+    top: 0;
+    z-index: 999;
+  }
+
+  .sidebar.active {
+    left: 0;
+  }
+
+  .main-content {
+    width: 100%;
+  }
+  .btn  {
+   margin-bottom: 5px;
+  }
+}
+
+.btn-warna{
+  background-color: #00B298 !important;
+  color: white !important;
+  font-weight: 600;
+   
+  }
+  
+.btn-warna:hover {
+    background-color: #07907b !important; /* Pastikan warna tetap konsisten */
+    transition: 1s ;
+    
+}

@@ -1,0 +1,163 @@
+
+@tempat_pkl_siswa_routes.route('/pilih-pkl', methods=['GET', 'POST'])
+def tampilkan_tempat_pkl():
+    cursor = db.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute("SELECT * FROM tempat_pkl")
+    semua_tempat = cursor.fetchall()
+    cursor.close()
+
+    if request.method == 'POST':
+        # Ambil data filter dari form
+        institusi_user = request.form.get('institusi', '').strip().lower()
+        bidang_user = request.form.get('bidang_pekerjaan', '').strip().lower()
+        fasilitas_user = [f.strip().lower() for f in request.form.getlist('fasilitas')]
+        durasi_user = request.form.get('durasi', '').strip()
+        kuota_user = int(request.form.get('kuota')) if request.form.get('kuota') else 0
+
+        # Log data filter untuk debug
+        print("Institusi dipilih:", institusi_user)
+        print("Bidang dipilih:", bidang_user)
+        print("Fasilitas dipilih:", fasilitas_user)
+        print("Durasi dipilih:", durasi_user)
+        print("Kuota dipilih:", kuota_user)
+
+        # Bobot untuk skor rekomendasi
+        bobot = {
+            "institusi": 0.20,
+            "bidang": 0.35,
+            "fasilitas": 0.20,
+            "durasi": 0.15,
+            "kuota": 0.10,
+        }
+
+        hasil_rekomendasi = []
+
+        for tempat in semua_tempat:
+            # Skip tempat jika institusi tidak cocok dan institusi_user diisi
+            if institusi_user and tempat['institusi'].strip().lower() != institusi_user:
+                print(f"Tempat {tempat['nama_tempat']} di-skip karena institusi tidak cocok")
+                continue
+
+            # Perhitungan skor berdasarkan kriteria
+            s1 = 1 if institusi_user and tempat['institusi'].strip().lower() == institusi_user else 0  # Institusi
+            s2 = 1 if tempat['bidang_pekerjaan'].strip().lower() == bidang_user else 0  # Bidang
+            fasilitas_tempat = tempat['fasilitas'].split(',') if tempat.get('fasilitas') else []
+            fasilitas_tempat = [f.strip().lower() for f in fasilitas_tempat]
+            s3 = len(set(fasilitas_user).intersection(fasilitas_tempat)) / len(fasilitas_user) if fasilitas_user else 0  # Fasilitas
+            s4 = 1 if tempat['durasi'].strip() == durasi_user else 0  # Durasi
+
+            # Kuota
+            kuota_tempat = int(tempat['kuota'])
+            if kuota_tempat < 5:
+                kuota_tempat_kat = 1
+            elif 5 <= kuota_tempat <= 10:
+                kuota_tempat_kat = 2
+            else:
+                kuota_tempat_kat = 3
+            s5 = 1 if kuota_tempat_kat == kuota_user else 0  # Kuota
+
+            # Hitung total skor
+            skor = (bobot['institusi'] * s1 +
+                    bobot['bidang'] * s2 +
+                    bobot['fasilitas'] * s3 +
+                    bobot['durasi'] * s4 +
+                    bobot['kuota'] * s5)
+
+            # Debug output untuk skor
+            print(f"[{tempat['nama_tempat']}] skor: {skor}, s2={s2}, s3={s3}, s4={s4}, s5={s5}")
+
+            # Hanya masukkan tempat yang memiliki skor lebih dari 0
+            if skor > 0:
+                tempat['score'] = round(skor, 2)
+                hasil_rekomendasi.append(tempat)
+
+        # Urutkan hasil rekomendasi berdasarkan skor
+        hasil_rekomendasi.sort(key=lambda x: x['score'], reverse=True)
+
+        # Render hasil ke halaman
+        return render_template('pilih_pkl.html', data_tempat_pkl=hasil_rekomendasi)
+
+    # Jika request GET, tampilkan semua tempat
+    return render_template('pilih_pkl.html', data_tempat_pkl=semua_tempat)
+
+
+
+
+
+
+    ///tanpa skip institusi 
+
+    @tempat_pkl_siswa_routes.route('/pilih-pkl', methods=['GET', 'POST'])
+def tampilkan_tempat_pkl():
+    cursor = db.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute("SELECT * FROM tempat_pkl")
+    semua_tempat = cursor.fetchall()
+    cursor.close()
+
+    if request.method == 'POST':
+        # Ambil data filter dari form
+        institusi_user = request.form.get('institusi', '').strip().lower()
+        bidang_user = request.form.get('bidang_pekerjaan', '').strip().lower()
+        fasilitas_user = [f.strip().lower() for f in request.form.getlist('fasilitas')]
+        durasi_user = request.form.get('durasi', '').strip()
+        kuota_user = int(request.form.get('kuota')) if request.form.get('kuota') else 0
+
+        # Log data filter untuk debug
+        print("Institusi dipilih:", institusi_user)
+        print("Bidang dipilih:", bidang_user)
+        print("Fasilitas dipilih:", fasilitas_user)
+        print("Durasi dipilih:", durasi_user)
+        print("Kuota dipilih:", kuota_user)
+
+        # Bobot untuk skor rekomendasi
+        bobot = {
+            "institusi": 0.20,
+            "bidang": 0.35,
+            "fasilitas": 0.20,
+            "durasi": 0.15,
+            "kuota": 0.10,
+        }
+
+        hasil_rekomendasi = []
+
+        for tempat in semua_tempat:
+            # Hitung skor berdasarkan kecocokan kriteria
+            s1 = 1 if institusi_user and tempat['institusi'].strip().lower() == institusi_user else 0  # Institusi
+            s2 = 1 if tempat['bidang_pekerjaan'].strip().lower() == bidang_user else 0  # Bidang
+
+            fasilitas_tempat = tempat['fasilitas'].split(',') if tempat.get('fasilitas') else []
+            fasilitas_tempat = [f.strip().lower() for f in fasilitas_tempat]
+            s3 = len(set(fasilitas_user).intersection(fasilitas_tempat)) / len(fasilitas_user) if fasilitas_user else 0  # Fasilitas
+
+            s4 = 1 if tempat['durasi'].strip() == durasi_user else 0  # Durasi
+
+            # Kuota
+            kuota_tempat = int(tempat['kuota'])
+            if kuota_tempat < 5:
+                kuota_tempat_kat = 1
+            elif 5 <= kuota_tempat <= 10:
+                kuota_tempat_kat = 2
+            else:
+                kuota_tempat_kat = 3
+            s5 = 1 if kuota_user and kuota_tempat_kat == kuota_user else 0  # Kuota
+
+            # Hitung total skor
+            skor = (bobot['institusi'] * s1 +
+                    bobot['bidang'] * s2 +
+                    bobot['fasilitas'] * s3 +
+                    bobot['durasi'] * s4 +
+                    bobot['kuota'] * s5)
+
+            print(f"[{tempat['nama_tempat']}] skor: {skor}, s1={s1}, s2={s2}, s3={s3}, s4={s4}, s5={s5}")
+
+            if skor > 0:
+                tempat['score'] = round(skor, 2)
+                hasil_rekomendasi.append(tempat)
+
+        # Urutkan berdasarkan skor tertinggi
+        hasil_rekomendasi.sort(key=lambda x: x['score'], reverse=True)
+
+        return render_template('pilih_pkl.html', data_tempat_pkl=hasil_rekomendasi)
+
+    # Jika GET, tampilkan semua
+    return render_template('pilih_pkl.html', data_tempat_pkl=semua_tempat)

@@ -1,0 +1,72 @@
+/* Gaya untuk body */
+body {
+    font-family: 'Montserrat', sans-serif;
+    background-color: #f8f9fa;
+}
+.logo{
+    width: 60px;
+    
+}
+
+.navbar {
+    /* background-color: #01a08e; */
+    background-color: rgba(0, 0, 0, 0.94);
+   
+}
+.navbar-toggler{
+   
+    background-color: #f8f9fa;
+}
+.navbar-toggler:focus {
+    
+    box-shadow: none !important; 
+}
+
+.navbar-toggler:active {
+    background-color: #fafafa8e;
+   
+  
+}
+
+nav a {
+    color: rgb(255, 255, 255)!important;
+    font-weight: bold !important;
+   
+}
+
+/* .btn-light{
+    color: #003834 !important;
+
+} */
+
+
+.btn-profil img {
+    width: 40px; /* Sesuaikan ukuran sesuai kebutuhan */
+    height: 40px; /* Pastikan proporsinya sama dengan width */
+    border-radius: 50%; /* Membuat gambar menjadi bulat */
+    object-fit: cover; /* Mengatur gambar agar pas dalam lingkaran */
+    border: 2px solid white; /* Tambahkan border jika diinginkan */
+    background-color: transparent; /* Pastikan tidak ada background */
+}
+
+.dropdown-menu{
+   background-color: rgba(0, 0, 0, 0.608);
+    margin-left: -110px;
+}
+
+.dropdown-item:hover{
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+
+
+@media (max-width: 990px) {
+   
+.dropdown-menu{
+  background-color: rgba(0, 0, 0, 0.608);
+    margin-left: auto !important;
+}
+    
+
+    
+}

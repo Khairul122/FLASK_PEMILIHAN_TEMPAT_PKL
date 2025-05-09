@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/mitra.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+<div class="wrapper d-flex">
+  <!-- Sidebar -->
+  <nav class="sidebar text-white" id="sidebar">
+    <div class="sidebar-header p-3 border-bottom">
+      <h4 class="text-white">Mitra Panel</h4>
+    </div>
+    <ul class="list-unstyled p-3">
+      <li class="mb-2"><a href="{{ url_for('mitra') }}" class="text-white d-block"> <i class="fas fa-home me-2"></i>Dashboard</a></li>
+      <li class="mb-2"><a href="{{ url_for('tempat_pkl.tempat_pkl_mitra') }}" class="text-white d-block"> <i class="fas fa-building me-2"></i>Tempat PKL</a></li>
+      <li class="mb-2"><a href="{{ url_for('lamaran_mitra') }}" class="text-white d-block"> <i class="fas fa-file-alt me-2"></i> Lamaran</a></li>
+      <li class="mb-2"><a href="{{ url_for('siswa_pkl_mitra') }}" class="text-white d-block"> <i class="fas fa-user-graduate me-2"></i>Siswa Pkl</a></li>
+    </ul>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main-content flex-grow-1">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-4">
+      <button class="btn btn-outline-secondary d-lg-none me-2" id="toggleSidebar">☰</button>
+      <span class="navbar-brand mb-0 h5">Lamaran PKL</span>
+      <div class="ms-auto d-flex align-items-center">
+        <div class="dropdown">
+          <a class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" href="#" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+            <img src="{{ url_for('static', filename='img/' ~ user.foto) }}" alt="profile" width="32" height="32" class="rounded-circle me-2">
+          
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownUser1">
+            <li><a class="dropdown-item" href="{{ url_for('profil_mitra') }}">Profil</a></li>
+            <li><a class="dropdown-item" href="#">Pengaturan</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">Logout</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="container-fluid mt-4 px-4">
+      <!-- Table -->
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="card-title">Data Lamaran PKL</h5>
+          <div class="table-responsive">
+            <table class="table table-striped align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>No</th>
+                  <th>Foto</th>
+                  <th>Nama Siswa</th>
+                  <th>Nis</th>
+                  <th>Jurusan</th>
+                  <th>Email</th>
+                  <th>No Hp</th>
+                  <th>Surat Pengantar Sekolah</th>
+                  <th>Kartu Pelajar</th>
+                  <th>Cv</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for lamaran in lamaran_data %}
+                <tr>
+                  <td>{{ loop.index }}</td>  <!-- Use loop.index instead of enumerate -->
+                  <td><img src="{{ url_for('static', filename='img/' ~ lamaran.foto) }}" alt="Foto" width="80"> </td>
+                  <td>{{ lamaran['nama_siswa'] }}</td>
+                  <td>{{ lamaran['nis'] }}</td>
+                  <td>{{ lamaran['jurusan'] }}</td>
+                  <td>{{ lamaran['email'] }}</td>
+                  <td>{{ lamaran['no_hp'] }}</td>
+                  <td><a href="{{ url_for('static', filename='dokumen/' ~ lamaran['surat_pengantar']) }}" target="_blank">Lihat</a></td>
+                  <td><a href="{{ url_for('static', filename='dokumen/' ~ lamaran['kartu_pelajar']) }}" target="_blank">Lihat</a></td>
+                  <td><a href="{{ url_for('static', filename='dokumen/' ~ lamaran['cv']) }}" target="_blank">Lihat</a></td>
+                  
+                  <td>
+                    {% if lamaran['status'] == 'Menunggu' %}
+                      <span class="badge bg-warning text-dark">{{ lamaran['status'] }}</span>
+                    {% elif lamaran['status'] == 'Diterima' %}
+                      <span class="badge bg-success">{{ lamaran['status'] }}</span>
+                    {% else %}
+                      <span class="badge bg-danger">{{ lamaran['status'] }}</span>
+                    {% endif %}
+                  </td>
+                  
+                  <td >
+                    <a href="{{ url_for('lamaran_pkl_mitra.terima_lamaran', lamaran_id=lamaran['id']) }}" class="btn btn-sm btn-success d-flex mb-2">Terima</a>
+                    <a href="{{ url_for('lamaran_pkl_mitra.tolak_lamaran', lamaran_id=lamaran['id']) }}" class="btn btn-sm btn-danger d-flex ">Tolak</a>
+                  </td>
+                  
+                </tr>
+                {% endfor %}
+              </tbody>
+              
+              
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Sidebar Toggle Script -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const toggleBtn = document.getElementById("toggleSidebar");
+    const sidebar = document.getElementById("sidebar");
+
+    toggleBtn.addEventListener("click", () => {
+      sidebar.classList.toggle("active");
+    });
+  });
+</script>
+{% endblock %}

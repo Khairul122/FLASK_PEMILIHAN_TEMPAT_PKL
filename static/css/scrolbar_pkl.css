@@ -1,0 +1,60 @@
+.d-flex.overflow-auto {
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.card {
+  transition: all 0.3s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+}
+
+
+.card-img {
+height: auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Tambahkan efek shadow */
+  /* background-color: aqua; */
+  border: none; /* Menghapus border default */
+  border-radius: 8px; /* Tambahkan border-radius untuk sudut melengkung */
+  overflow: hidden; /* Pastikan gambar dan konten di dalam card tidak melampaui border */
+}
+
+.card-img img {
+  width: 100%; /* Mengatur lebar gambar agar sesuai dengan lebar card */
+  height: 200px; /* Mengatur tinggi gambar agar sesuai dengan tinggi card */
+  
+}
+
+.card-body > .card-title {
+  font-size: 1.25rem; /* Ukuran font untuk judul */
+  font-weight: bold;
+  color: #003834;
+  white-space: nowrap; /* Mencegah teks untuk berpindah baris */
+  overflow: hidden;    /* Menyembunyikan teks yang melampaui area */
+  text-overflow: ellipsis; /* Menambahkan titik-titik di akhir teks */
+}
+
+.card-text {
+  font-size: 0.875rem; /* Ukuran font untuk deskripsi */
+  color: #555; /* Warna teks deskripsi */
+}
+
+
+.btn-lihat-detail{
+border-color: #003834;
+ color: #003834 !important;
+ border-radius: 12px;
+ font-weight: 600;
+  outline: none; /* Menghapus outline saat tombol di-fokuskan */
+}
+
+.btn-lihat-detail:hover{
+color: #f7f7f7;
+background-color: #e4e5e5f6 !important;
+transition: 0.4s;
+}
+
+

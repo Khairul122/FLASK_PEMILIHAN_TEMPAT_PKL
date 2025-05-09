@@ -1,0 +1,42 @@
+/* Gaya untuk body */
+body {
+    font-family: 'Montserrat', sans-serif;
+    background-color: #f8f9fa;
+}
+.logo{
+    width: 60px;
+    
+}
+
+.navbar {
+    /* background-color: #01a08e; */
+    background-color: rgba(0, 0, 0, 0.94);
+   
+}
+.navbar-toggler{
+   
+    background-color: #f8f9fa;
+}
+.navbar-toggler:focus {
+    
+    box-shadow: none !important; 
+}
+
+.navbar-toggler:active {
+    background-color: #fafafa8e;
+   
+  
+}
+
+nav a {
+    color: rgb(255, 255, 255)!important;
+    font-weight: bold !important;
+   
+}
+
+.btn-light{
+    color: #003834 !important;
+
+}
+
+

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+{% if session.get('role') == 'siswa' %}
+{% include "navbar/navbar_login.html" %}
+{% else %}
+{% include "navbar/navbar.html" %}
+{% endif %}
+{% include 'modal/modal_lamaran.html' %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/detail_pkl.css') }}">
+
+<div class="container ">
+    <br><br><br><br><br>
+  <div class="row ">
+    <div class="col-lg-6 mb-4">
+      <div class="card shadow-sm border-0 rounded-4">
+        <img src="{{ url_for('static', filename='img/' ~ data_tempat_pkl.foto) }}" class="card-img-top rounded-top-4" alt="Foto">
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <h2 class="fw-bold mb-3">{{ data_tempat_pkl.nama_tempat }}</h2>
+      <p class="mb-1"><strong>Mitra :</strong> {{ data_tempat_pkl.nama_perusahaan }}</p>
+      <p class="mb-1"><strong>Institusi :</strong> {{ data_tempat_pkl.institusi }}</p>
+      <p class="mb-1"><strong>Jenis Pekerjaan :</strong> {{ data_tempat_pkl.bidang_pekerjaan }}</p>
+      <p class="mb-1"><strong>Fasilitas :</strong> {{ data_tempat_pkl.fasilitas }}</p>
+      <p class="mb-1"><strong>Durasi Pkl :</strong> {{ data_tempat_pkl.durasi }}</p>
+      <p class="mb-1"><strong>Kuota :</strong> {{ data_tempat_pkl.kuota }}</p>
+      <p class="mb-1"><strong>Alamat :</strong> {{ data_tempat_pkl.alamat }}</p>
+      <p class="mb-1"><strong>Deskripsi :</strong> {{ data_tempat_pkl.deskripsi }} </p>
+
+      <a href="" class="btn btn-primary px-4 py-2 rounded-pill mt-5" data-bs-toggle="modal" data-bs-target="#modalLamaran">Ajukan Lamaran</a>
+    </div>
+  </div>
+</div>
+<br><br>
+{% include "footer/footer.html" %}
+{% endblock %}

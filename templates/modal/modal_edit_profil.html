@@ -1,0 +1,59 @@
+
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modal_edit_profil.css') }}">
+<!-- Modal Edit Profil -->
+<div class="modal fade" id="modalEditProfil" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <button type="button" class="btn-close bg-light" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="formEditProfil" method="post" enctype="multipart/form-data" action="{{ url_for('profil.edit_profil_siswa') }}">
+          <div class="mb-3">
+            <label for="foto" class="form-label">Foto</label>
+            <input type="file" class="form-control" id="fotoProfil" name="fotoProfil" accept="image/*">
+          </div>
+
+          <div class="mb-3">
+            <label for="nama" class="form-label">Nama</label>
+            <input type="text" class="form-control" id="nama" name="nama" value="{{ user.nama_siswa }}">
+          </div>
+
+          <div class="mb-3">
+            <label for="nis" class="form-label">NIS</label>
+            <input type="text" class="form-control" id="nis" name="nis" value="{{ user.nis }}">
+          </div>
+
+          <div class="mb-3">
+            <label for="jurusan" class="form-label">Jurusan</label>
+            <input type="text" class="form-control" id="jurusan" name="jurusan" value="{{ user.jurusan }}">
+          </div>
+
+          <div class="mb-3">
+            <label for="kelas" class="form-label">Kelas</label>
+            <input type="text" class="form-control" id="kelas" name="kelas" value="{{ user.kelas}}">
+          </div>
+
+          <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}">
+          </div>
+
+          <div class="mb-3">
+            <label for="nohp" class="form-label">No. HP</label>
+            <input type="text" class="form-control" id="no_hp" name="nohp" value="{{ user.no_hp}}">
+          </div>
+
+          <div class="text-end d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalProfil">Batal</button>
+            <button type="submit" class="btn btn-warna btn-sm">Simpan</button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block content %}
+{% if session.get('role') == 'siswa' %}
+{% include "navbar/navbar_login.html" %}
+{% else %}
+{% include "navbar/navbar.html" %}
+
+{% endif %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+<div class="card " >
+    <img src="{{ url_for('static', filename='img/img_hompage1.jpg') }}" class="d-block w-100" alt="...">
+    <!-- Overlay Text -->
+    <div class="text  container">
+        <h1 class="text-start mb-0">Ambil Kendali</h1>
+        <h1 class="mb-0">Masa Depanmu</h1>
+        <p class="mb-0">Langkah Awal Menuju Sukses.</p>
+        <p class="mb-0">Temukan Tempat PKL Terbaik dan Wujudkan Masa Depan Cerahmu.</p>
+
+        <div class=" mt-3 card-btn">
+            <a href="{{ url_for('pilih_pkl') }}" class="btn btn-cari-tempat-pkl"> Cari Tempat PKL</a>
+             <a href="#syarat" class="btn btn-light"> Cek Persyaratan</a>
+        </div>
+          
+    </div>
+    
+</div>
+
+    <div class="container">
+        <div class="mt-5 judul-title">
+            <h1>Pilih Jalur Karir PKL Kamu</h1>
+        </div>
+        {% include "scrolbar_tempat_pkl/scrolbar_pkl.html" %}
+       
+        <div class="d-flex justify-content-center align-items-center mt-4">
+            <a href="{{ url_for('pilih_pkl') }}" class="btn btn-cari-tempat-pkl">Cari Tempat PKL lainya</a>
+        </div>
+       
+        <div class="mt-5 judul-title " >
+            <h1 id="syarat">Apa saja syarat PKL?</h1>
+        </div>
+
+        <table class="table mt-4">
+                <thead class="text-center">
+                    <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Program kerja Praktek</th>
+                     <th scope="col">Smester</th>
+                  
+                   
+                    </tr>
+                </thead>
+                <tbody class="text-center">
+                    <tr>
+                    <th scope="row">1</th>
+                    <td>Sekolah Menengah Kejuruan</td>
+                    <td>Minimal semester 4 </td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+
+        </div>
+            
+        {% include "footer/footer.html" %}
+            
+        
+    
+<script>
+    document.getElementById('index','beranda').addEventListener('click', function (event) {
+        event.preventDefault(); // Mencegah perilaku default link
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth' // Mengatur scroll agar smooth
+        });
+    });
+
+    document.getElementById('beranda').addEventListener('click', function (event) {
+        event.preventDefault(); // Mencegah perilaku default link
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth' // Mengatur scroll agar smooth
+        });
+    });
+
+   
+</script>
+
+{% endblock %}
