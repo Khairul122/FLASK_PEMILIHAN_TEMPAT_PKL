@@ -24,30 +24,29 @@
             <label class="form-label">Durasi PKL</label>
             <select class="form-select" name="durasi_pkl">
               <option value="">Pilih Durasi</option>
-              <option value="3">2 Bulan 3x Minggu</option>
-              <option value="4">2 Bulan 4x Minggu</option>
-              <option value="5">2 Bulan 5x Minggu</option>
-              <option value="6">2 Bulan 6x Minggu</option>
+              <option value="pendek">Pendek</option>
+              <option value="sedang">Sedang</option>
+              <option value="panjang">Panjang</option>
             </select>
           </div>
 
           <div class="mt-3">
             <label class="form-label">Fasilitas</label>
-            {% for fasilitas in ['komputer', 'internet', 'perangkat jaringan', 'printer', 'scanner'] %}
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="{{ fasilitas }}" value="{{ fasilitas }}" name="fasilitas">
-              <label class="form-check-label" for="{{ fasilitas }}">{{ fasilitas.capitalize() }}</label>
-            </div>
-            {% endfor %}
+            <select class="form-select" name="fasilitas_level">
+              <option value="">Pilih Fasilitas</option>
+              <option value="kurang">Kurang</option>
+              <option value="sedang">Sedang</option>
+              <option value="sangat lengkap">Sangat Lengkap</option>
+            </select>
           </div>
 
           <div class="mt-3">
             <label class="form-label">Kuota</label>
             <select class="form-select" name="kuota">
               <option value="">Pilih Kuota</option>
-              <option value="1">Sedikit</option>
-              <option value="2">Sedang</option>
-              <option value="3">Banyak</option>
+              <option value="sedikit">Sedikit</option>
+              <option value="sedang">Sedang</option>
+              <option value="banyak">Banyak</option>
             </select>
           </div>
 
