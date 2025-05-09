@@ -86,6 +86,7 @@
                   <th>Durasi</th>
                   <th>Kuota</th>
                   <th>Deskripsi</th>
+                  <th>Jarak</th>
                   <th>Aksi</th>
                 </tr>
               </thead>
@@ -102,6 +103,7 @@
                     <td>{{ data.durasi }}</td>
                     <td>{{ data.kuota }}</td>
                     <td>{{ data.deskripsi }}</td>
+                    <td>{{ data.jarak }}</td>
                     <td>
                       <div class="d-flex gap-2 "></div>
                       <form action="{{ url_for('data_tempat_pkl_view.hapus_tempat_pkl', id=data.id) }}" method="post" style="display:inline;">

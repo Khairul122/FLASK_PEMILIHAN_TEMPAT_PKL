@@ -31,6 +31,7 @@ def tambah_tempat_pkl():
         kuota = request.form['kuota']
         alamat = request.form['alamat']
         deskripsi = request.form['deskripsi']
+        jarak = request.form['jarak']
 
         print(fasilitas)
 
@@ -46,9 +47,9 @@ def tambah_tempat_pkl():
         # Simpan ke database
         cursor = mysql.connection.cursor()
         cursor.execute("""
-            INSERT INTO tempat_pkl (foto, nama_tempat, institusi, bidang_pekerjaan, fasilitas, durasi, kuota, alamat, deskripsi, mitra_id)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, (filename, nama_tempat, institusi, bidang_str, fasilitas_str, durasi, kuota, alamat, deskripsi, mitra_id))
+            INSERT INTO tempat_pkl (foto, nama_tempat, institusi, bidang_pekerjaan, fasilitas, durasi, kuota, alamat, deskripsi, mitra_id, jarak)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (filename, nama_tempat, institusi, bidang_str, fasilitas_str, durasi, kuota, alamat, deskripsi, mitra_id, jarak))
         mysql.connection.commit()
         cursor.close()
 
@@ -116,8 +117,9 @@ def edit_tempat_pkl(id):
         fasilitas   = request.form.getlist('fasilitas')
         durasi      = request.form.get('durasi')      or old['durasi']
         kuota       = request.form.get('kuota')       or old['kuota']
-        alamat       = request.form.get('alamat')       or old['alamat']
-        deskripsi   = request.form.get('deskripsi')       or old['deskripsi']
+        alamat      = request.form.get('alamat')      or old['alamat']
+        deskripsi   = request.form.get('deskripsi')   or old['deskripsi']
+        jarak       = request.form.get('jarak')       or old['jarak']
 
         bidang_str    = ', '.join(bidang)      if bidang     else old['bidang_pekerjaan']
         fasilitas_str = ', '.join(fasilitas)  if fasilitas  else old['fasilitas']
@@ -141,10 +143,11 @@ def edit_tempat_pkl(id):
               durasi=%s,
               kuota=%s,
               alamat=%s,
-              deskripsi=%s
+              deskripsi=%s,
+              jarak=%s
             WHERE id=%s
         """, (filename, nama_tempat, institusi,
-              bidang_str, fasilitas_str, durasi, kuota, alamat, deskripsi, id))
+              bidang_str, fasilitas_str, durasi, kuota, alamat, deskripsi, jarak, id))
         mysql.connection.commit()
         cursor.close()
 

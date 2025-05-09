@@ -62,6 +62,7 @@
                   <th>Kuota</th>
                   <th>Alamat</th>
                   <th>Deskripsi</th>
+                  <th>Jarak</th>
                   <th>Aksi</th>
                 </tr>
               </thead>
@@ -78,6 +79,7 @@
                     <td>{{ data.kuota }}</td>
                     <td>{{ data.alamat }}</td>
                     <td>{{ data.deskripsi }}</td>
+                    <td>{{ data.jarak }}</td>
                     <td>
                       <div>
                       <a href="{{ url_for('tempat_pkl.edit_tempat_pkl', id=data.id) }}" class="btn btn-sm btn-warning d-flex mb-2">Edit</a>

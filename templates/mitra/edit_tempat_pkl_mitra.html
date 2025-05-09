@@ -138,6 +138,10 @@
               <textarea class="form-control"  name="deskripsi" id="deskripsi" >{{ data.deskripsi }}</textarea>
             </div>
 
+  <div class="mb-3">
+              <label for="jarak" class="form-label">Jarak</label>
+              <input type="number" class="form-control" id="jarak" name="jarak" value="{{ data.jarak}}">
+            </div>
             <button type="submit" class="btn btn-success">Simpan</button>
             <a href="{{ url_for('tempat_pkl_mitra') }}" class="btn btn-secondary">Kembali</a>
           </form>
