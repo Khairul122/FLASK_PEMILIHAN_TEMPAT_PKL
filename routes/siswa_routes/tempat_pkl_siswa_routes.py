@@ -30,19 +30,13 @@ import re
 
 @tempat_pkl_siswa_routes.route('/pilih-pkl', methods=['GET', 'POST'])
 def tampilkan_tempat_pkl():
-    cursor = db.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute("SELECT * FROM tempat_pkl")
-    semua_tempat = cursor.fetchall()
-    cursor.close()
-
     if request.method == 'POST':
         bidang_user = request.form.get('bidang_keahlian', '').strip().lower()
         durasi_user = request.form.get('durasi_pkl', '').strip().lower()
         fasilitas_level_user = request.form.get('fasilitas_level', '').strip().lower()
         kuota_user = request.form.get('kuota', '').strip().lower()
-        jarak_user = int(request.form.get('jarak')) if request.form.get('jarak') else 0
+        jarak_user = request.form.get('jarak', '').strip().lower()  # Simpan sebagai string
 
-        # ====== Tambahan log preparation ======
         print("\n=== PREPARATION INPUT USER ===")
         print(f"Bidang dipilih     : {bidang_user}")
         print(f"Durasi dipilih     : {durasi_user}")
@@ -50,6 +44,17 @@ def tampilkan_tempat_pkl():
         print(f"Kuota dipilih      : {kuota_user}")
         print(f"Jarak dipilih      : {jarak_user}")
         print("===============================\n")
+
+        cursor = db.connection.cursor(MySQLdb.cursors.DictCursor)
+        
+        # Jika user memilih bidang, gunakan query dengan filter LIKE
+        if bidang_user:
+            cursor.execute("SELECT * FROM tempat_pkl WHERE LOWER(bidang_pekerjaan) LIKE %s", (f'%{bidang_user}%',))
+        else:
+            cursor.execute("SELECT * FROM tempat_pkl")
+        
+        semua_tempat = cursor.fetchall()
+        cursor.close()
 
         bobot = {
             "bidang": 0.3,
@@ -63,7 +68,8 @@ def tampilkan_tempat_pkl():
 
         for tempat in semua_tempat:
             cocok_bidang = 5 if bidang_user and bidang_user in (tempat.get('bidang_pekerjaan') or '').lower() else 1
-
+            bidang_fuzzy = 'cocok' if cocok_bidang == 5 else 'tidak cocok'
+            
             durasi_raw = tempat.get('durasi') or ''
             durasi_tempat = 0
             match = re.search(r'(\d+)\s*x', durasi_raw)
@@ -73,7 +79,6 @@ def tampilkan_tempat_pkl():
                 except ValueError:
                     durasi_tempat = 0
 
-            # Mapping durasi ke label
             if durasi_tempat <= 3:
                 durasi_fuzzy = 'pendek'
             elif durasi_tempat <= 5:
@@ -82,7 +87,6 @@ def tampilkan_tempat_pkl():
                 durasi_fuzzy = 'panjang'
             durasi_score = 5 if durasi_fuzzy == durasi_user else 1
 
-            # Fasilitas level: hitung jumlah cocok dan mapping ke kategori
             fasilitas_tempat = [f.strip().lower() for f in (tempat.get('fasilitas') or '').split(',')]
             fasilitas_match_count = len(set(fasilitas_tempat))
             if fasilitas_match_count <= 2:
@@ -90,10 +94,9 @@ def tampilkan_tempat_pkl():
             elif fasilitas_match_count <= 4:
                 fasilitas_fuzzy = 'sedang'
             else:
-                fasilitas_fuzzy = 'sangat lengkap'
+                fasilitas_fuzzy = 'lengkap'
             fasilitas_score = 5 if fasilitas_fuzzy == fasilitas_level_user else 1
 
-            # Kuota
             try:
                 kuota_tempat = int(tempat.get('kuota') or 0)
             except (ValueError, TypeError):
@@ -106,23 +109,22 @@ def tampilkan_tempat_pkl():
                 kuota_fuzzy = 'banyak'
             kuota_score = 5 if kuota_fuzzy == kuota_user else 1
 
-            # Jarak
             try:
                 jarak_tempat = float(tempat.get('jarak') or 0)
             except (ValueError, TypeError):
                 jarak_tempat = 0
+                
+            # Klasifikasi jarak disederhanakan menjadi 3 kategori
             if jarak_tempat <= 1:
-                jarak_score_value = 1
                 jarak_fuzzy = 'dekat'
             elif jarak_tempat <= 5:
-                jarak_score_value = 2
                 jarak_fuzzy = 'sedang'
             else:
-                jarak_score_value = 3
                 jarak_fuzzy = 'jauh'
-            jarak_score = 5 if jarak_user == jarak_score_value else 1
+            
+            # Skor jarak berdasarkan kecocokan dengan preferensi user
+            jarak_score = 5 if jarak_fuzzy == jarak_user else 1
 
-            # --- Aturan & Implikasi (min) ---
             rule_results = []
 
             if jarak_fuzzy == 'dekat' and kuota_fuzzy == 'banyak':
@@ -131,14 +133,21 @@ def tampilkan_tempat_pkl():
                 rule_results.append(min(4,3))
             if jarak_fuzzy == 'jauh' and kuota_fuzzy == 'sedikit':
                 rule_results.append(min(2,1))
-            if fasilitas_fuzzy == 'sangat lengkap' and durasi_fuzzy == 'panjang':
+            if fasilitas_fuzzy == 'lengkap' and durasi_fuzzy == 'panjang':
                 rule_results.append(min(5,5))
             if fasilitas_fuzzy == 'sedang' and durasi_fuzzy == 'sedang':
                 rule_results.append(min(3,3))
             if fasilitas_fuzzy == 'kurang' and durasi_fuzzy == 'pendek':
                 rule_results.append(min(1,1))
+            if bidang_fuzzy == 'cocok' and fasilitas_fuzzy == 'lengkap':
+                rule_results.append(min(5,5))
+            if bidang_fuzzy == 'cocok' and durasi_fuzzy == 'panjang':
+                rule_results.append(min(5,5))
+            if bidang_fuzzy == 'cocok' and kuota_fuzzy == 'banyak':
+                rule_results.append(min(5,5))
+            if bidang_fuzzy == 'cocok' and jarak_fuzzy == 'dekat':
+                rule_results.append(min(5,5))
 
-            # --- Defuzzyfikasi ---
             fuzzy_numeric = []
             for r in rule_results:
                 if r >=5:
@@ -155,9 +164,8 @@ def tampilkan_tempat_pkl():
             if fuzzy_numeric:
                 defuzzified_score = sum(fuzzy_numeric) / len(fuzzy_numeric)
             else:
-                defuzzified_score = 1
+                defuzzified_score = 3
 
-            # --- KBRS Calculation ---
             skor_kbrs = (
                 bobot['bidang'] * (cocok_bidang / 5) +
                 bobot['durasi'] * (durasi_score / 5) +
@@ -166,28 +174,103 @@ def tampilkan_tempat_pkl():
                 bobot['jarak'] * (jarak_score / 5)
             )
 
-            # --- Final Score ---
-            total_skor = round((skor_kbrs + (defuzzified_score / 5)) / 2, 4)
+            defuzzified_normalized = max(0.2, defuzzified_score / 5)
+            total_skor = round((skor_kbrs + defuzzified_normalized) / 2, 4)
 
-            # --- Label ---
+            bidang_label = "Sesuai Bidang" if bidang_fuzzy == 'cocok' else "Di Luar Bidang"
+            
             if total_skor >= 0.75:
-                rekomendasi_label = "Sangat Rekomendasi"
+                rekomendasi_kategori = "Sangat Direkomendasikan"
             elif total_skor >= 0.5:
-                rekomendasi_label = "Kurang Rekomendasi"
+                rekomendasi_kategori = "Direkomendasikan"
+            elif total_skor >= 0.3:
+                rekomendasi_kategori = "Kurang Direkomendasikan"
             else:
-                rekomendasi_label = "Tidak Rekomendasi"
+                rekomendasi_kategori = "Tidak Direkomendasikan"
+                
+            # Buat detail keterangan untuk setiap tempat
+            keterangan_detail = []
+            
+            # Tambahkan keterangan bidang jika user memilih bidang
+            if bidang_user and bidang_fuzzy == 'cocok':
+                keterangan_detail.append(f"bidang {bidang_user}")
+            
+            # Keterangan fasilitas
+            keterangan_detail.append(f"fasilitas {fasilitas_fuzzy}")
+                
+            # Keterangan kuota
+            keterangan_detail.append(f"kuota {kuota_fuzzy}")
+            
+            # Keterangan jarak
+            keterangan_detail.append(f"jarak {jarak_fuzzy}")
+            
+            # Tambahkan alasan tidak direkomendasikan
+            if rekomendasi_kategori == "Tidak Direkomendasikan":
+                if jarak_fuzzy == 'jauh':
+                    keterangan_detail.append("jarak terlalu jauh")
+                if kuota_fuzzy == 'sedikit':
+                    keterangan_detail.append("kuota terlalu sedikit")
+            
+            keterangan = f"{rekomendasi_kategori}: {', '.join(keterangan_detail)}"
+                
+            rekomendasi_label = f"{bidang_label} - {rekomendasi_kategori}"
 
             print(f"[{tempat.get('nama_tempat','Unknown')}] KBRS: {skor_kbrs}, Fuzzy: {defuzzified_score}, Total: {total_skor}, Label: {rekomendasi_label}")
 
             if total_skor > 0:
                 tempat['score'] = total_skor
                 tempat['rekomendasi'] = rekomendasi_label
+                tempat['keterangan'] = keterangan
                 hasil_rekomendasi.append(tempat)
 
         hasil_rekomendasi.sort(key=lambda x: x['score'], reverse=True)
         return render_template('pilih_pkl.html', data_tempat_pkl=hasil_rekomendasi)
-
-    return render_template('pilih_pkl.html', data_tempat_pkl=semua_tempat)
+    else:
+        # Untuk GET request, ambil semua data dan tambahkan keterangan default
+        cursor = db.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute("SELECT * FROM tempat_pkl")
+        semua_tempat = cursor.fetchall()
+        cursor.close()
+        
+        for tempat in semua_tempat:
+            # Membuat keterangan dasar untuk tampilan awal
+            fasilitas_tempat = [f.strip().lower() for f in (tempat.get('fasilitas') or '').split(',')]
+            fasilitas_count = len(set(fasilitas_tempat))
+            
+            if fasilitas_count <= 2:
+                fasilitas_desc = "fasilitas kurang"
+            elif fasilitas_count <= 4:
+                fasilitas_desc = "fasilitas sedang"
+            else:
+                fasilitas_desc = "fasilitas lengkap"
+                
+            try:
+                kuota_tempat = int(tempat.get('kuota') or 0)
+            except (ValueError, TypeError):
+                kuota_tempat = 0
+                
+            if kuota_tempat < 5:
+                kuota_desc = "kuota sedikit"
+            elif 5 <= kuota_tempat <= 10:
+                kuota_desc = "kuota sedang"
+            else:
+                kuota_desc = "kuota banyak"
+                
+            try:
+                jarak_tempat = float(tempat.get('jarak') or 0)
+            except (ValueError, TypeError):
+                jarak_tempat = 0
+                
+            if jarak_tempat <= 1:
+                jarak_desc = "jarak dekat"
+            elif jarak_tempat <= 5:
+                jarak_desc = "jarak sedang"
+            else:
+                jarak_desc = "jarak jauh"
+                
+            tempat['keterangan'] = f"Detail: {fasilitas_desc}, {kuota_desc}, {jarak_desc}"
+            
+        return render_template('pilih_pkl.html', data_tempat_pkl=semua_tempat)
 
 
 

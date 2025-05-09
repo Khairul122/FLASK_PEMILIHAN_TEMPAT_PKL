@@ -35,39 +35,59 @@
     {% else %}
       <div class="row">
         {% for tempat in data_tempat_pkl %}
-        <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-3">
-          <div class="card h-100">
-            <img src="{{ url_for('static', filename='img/' ~ tempat.foto) }}" class="card-img-top" alt="Foto Tempat">
+        <div class="col-12 col-sm-6 col-md-6 col-lg-4 mb-4">
+          <div class="card h-100 shadow-sm">
+            <img src="{{ url_for('static', filename='img/' ~ tempat.foto) }}" class="card-img-top" alt="Foto Tempat" style="height: 180px; object-fit: cover;">
             <div class="card-body">
-              <h5 class="card-title">{{ tempat.nama_tempat }}</h5>
-              <p class="card-text mb-0">Institusi: {{ tempat.institusi }}</p>
-              <p class="card-text mb-0">Bidang: {{ tempat.bidang_pekerjaan }}</p>
-              <p class="card-text mb-0">Kuota: {{ tempat.kuota }}</p>
+              <h5 class="card-title fw-bold">{{ tempat.nama_tempat }}</h5>
+              <div class="my-3">
+                <p class="card-text mb-1"><i class="bi bi-building me-2"></i>Institusi: {{ tempat.institusi }}</p>
+                <p class="card-text mb-1"><i class="bi bi-briefcase me-2"></i>Bidang: {{ tempat.bidang_pekerjaan }}</p>
+                <p class="card-text mb-1"><i class="bi bi-people me-2"></i>Kuota: {{ tempat.kuota }}</p>
+              </div>
               
               {% if tempat.score is defined %}
-              <div class="mt-3">
-                <div class="d-flex justify-content-between align-items-center">
+              <div class="mt-3 p-2 bg-light rounded">
+                <div class="d-flex justify-content-between align-items-center mb-2">
                   <span class="fw-bold">Skor Hybrid:</span>
                   <span class="badge bg-primary">{{ tempat.score }}</span>
                 </div>
                 
                 {% if tempat.rekomendasi is defined %}
-                <div class="d-flex justify-content-between mt-2">
+                <div class="d-flex justify-content-between align-items-center mb-2">
                   <span class="fw-bold">Rekomendasi:</span>
-                  {% if tempat.rekomendasi == 'Sangat Rekomendasi' %}
-                    <span class="badge bg-success">{{ tempat.rekomendasi }}</span>
-                  {% elif tempat.rekomendasi == 'Kurang Rekomendasi' %}
-                    <span class="badge bg-warning text-dark">{{ tempat.rekomendasi }}</span>
+                  {% if 'Sangat Direkomendasikan' in tempat.rekomendasi %}
+                    <span class="badge bg-success">{{ tempat.rekomendasi.split(' - ')[1] }}</span>
+                  {% elif 'Direkomendasikan' in tempat.rekomendasi and 'Kurang' not in tempat.rekomendasi and 'Tidak' not in tempat.rekomendasi %}
+                    <span class="badge bg-primary">{{ tempat.rekomendasi.split(' - ')[1] }}</span>
+                  {% elif 'Kurang Direkomendasikan' in tempat.rekomendasi %}
+                    <span class="badge bg-warning text-dark">{{ tempat.rekomendasi.split(' - ')[1] }}</span>
                   {% else %}
-                    <span class="badge bg-danger">{{ tempat.rekomendasi }}</span>
+                    <span class="badge bg-danger">{{ tempat.rekomendasi.split(' - ')[1] }}</span>
                   {% endif %}
                 </div>
                 {% endif %}
+                
+                {% if tempat.keterangan is defined %}
+                <div>
+                  <p class="text-muted fw-bold mb-1">Detail:</p>
+                  <p class="text-muted small mb-0">{{ tempat.keterangan.split(': ')[1] }}</p>
+                </div>
+                {% endif %}
               </div>
+              {% else %}
+                {% if tempat.keterangan is defined %}
+                <div class="mt-3 p-2 bg-light rounded">
+                  <p class="text-muted fw-bold mb-1">Informasi:</p>
+                  <p class="text-muted small mb-0">{{ tempat.keterangan }}</p>
+                </div>
+                {% endif %}
               {% endif %}
               
               <div class="mt-3">
-                <a href="{{ url_for('tempat_pkl_siswa_routes.detail_tempat_pkl', id=tempat.id) }}" class="btn btn-lihat-detail w-100">Lihat Detail</a>
+                <a href="{{ url_for('tempat_pkl_siswa_routes.detail_tempat_pkl', id=tempat.id) }}" class="btn btn-lihat-detail w-100">
+                  <i class="bi bi-info-circle me-2"></i>Lihat Detail
+                </a>
               </div>
             </div>
           </div>
