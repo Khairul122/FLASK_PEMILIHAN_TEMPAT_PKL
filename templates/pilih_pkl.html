@@ -44,21 +44,60 @@
                 <p class="card-text mb-1"><i class="bi bi-building me-2"></i>Institusi: {{ tempat.institusi }}</p>
                 <p class="card-text mb-1"><i class="bi bi-briefcase me-2"></i>Bidang: {{ tempat.bidang_pekerjaan }}</p>
                 <p class="card-text mb-1"><i class="bi bi-people me-2"></i>Kuota: {{ tempat.kuota }}</p>
+                <p class="card-text mb-1"><i class="bi bi-geo-alt me-2"></i>Jarak: 
+                  {% if tempat.jarak is not none %}
+                    {{ tempat.jarak }} km
+                  {% else %}
+                    Tidak tersedia
+                  {% endif %}
+                </p>
+                <p class="card-text mb-1"><i class="bi bi-calendar-week me-2"></i>Durasi: {{ tempat.durasi }}</p>
               </div>
               
               {% if tempat.score is defined %}
               <div class="mt-3 p-2 bg-light rounded">
+                <!-- Skor KBRS -->
+                {% if tempat.skor_kbrs is defined %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="fw-bold">Skor KBRS:</span>
+                  <span class="badge bg-info text-dark">{{ "%.4f"|format(tempat.skor_kbrs) }}</span>
+                </div>
+                {% endif %}
+                
+                <!-- Skor Fuzzy -->
+                {% if tempat.skor_fuzzy is defined %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="fw-bold">Skor Fuzzy:</span>
+                  <span class="badge bg-info text-dark">{{ "%.4f"|format(tempat.skor_fuzzy) }}</span>
+                </div>
+                {% endif %}
+                
+                <!-- Skor Hybrid -->
                 <div class="d-flex justify-content-between align-items-center mb-2">
                   <span class="fw-bold">Skor Hybrid:</span>
-                  <span class="badge bg-primary">{{ tempat.score }}</span>
+                  <span class="badge bg-primary">{{ "%.4f"|format(tempat.score) }}</span>
                 </div>
                 
+                <!-- Status Bidang -->
+                {% if 'Sesuai Bidang' in tempat.rekomendasi %}
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="fw-bold">Status Bidang:</span>
+                    <span class="badge bg-success">Sesuai</span>
+                  </div>
+                {% elif 'Di Luar Bidang' in tempat.rekomendasi %}
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="fw-bold">Status Bidang:</span>
+                    <span class="badge bg-warning text-dark">Di Luar Bidang</span>
+                  </div>
+                {% endif %}
+                
+                <!-- Rekomendasi -->
                 {% if tempat.rekomendasi is defined %}
                 <div class="d-flex justify-content-between align-items-center mb-2">
                   <span class="fw-bold">Rekomendasi:</span>
                   {% if 'Sangat Direkomendasikan' in tempat.rekomendasi %}
                     <span class="badge bg-success">{{ tempat.rekomendasi.split(' - ')[1] }}</span>
-                  {% elif 'Dipertimbangkan' in tempat.rekomendasi and 'Kurang' not in tempat.rekomendasi and 'Tidak' not in tempat.rekomendasi %}
+                  {% elif 'Direkomendasikan' in tempat.rekomendasi and 'Kurang' not in tempat.rekomendasi and 'Tidak' not in tempat.rekomendasi %}
                     <span class="badge bg-primary">{{ tempat.rekomendasi.split(' - ')[1] }}</span>
                   {% elif 'Kurang Direkomendasikan' in tempat.rekomendasi %}
                     <span class="badge bg-warning text-dark">{{ tempat.rekomendasi.split(' - ')[1] }}</span>
@@ -68,16 +107,40 @@
                 </div>
                 {% endif %}
                 
+                <!-- Detail Keterangan -->
                 {% if tempat.keterangan is defined %}
                 <div>
                   <p class="text-muted fw-bold mb-1">Detail:</p>
                   <p class="text-muted small mb-0">{{ tempat.keterangan.split(': ')[1] }}</p>
                 </div>
                 {% endif %}
+                
+                <!-- Rule yang Terpicu -->
+                {% if tempat.rules_terpicu is defined and tempat.rules_terpicu|length > 0 %}
+                <div class="mt-2">
+                  <p class="text-muted fw-bold mb-1">Rule Terpicu:</p>
+                  <p class="text-muted small mb-0">{{ tempat.rules_terpicu }}</p>
+                </div>
+                {% endif %}
               </div>
               {% else %}
                 {% if tempat.keterangan is defined %}
                 <div class="mt-3 p-2 bg-light rounded">
+                  <!-- Skor Default untuk tampilan awal -->
+                  {% if tempat.skor_kbrs is defined %}
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="fw-bold">Skor KBRS:</span>
+                    <span class="badge bg-secondary">{{ "%.2f"|format(tempat.skor_kbrs) }}</span>
+                  </div>
+                  {% endif %}
+                  
+                  {% if tempat.skor_fuzzy is defined %}
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="fw-bold">Skor Fuzzy:</span>
+                    <span class="badge bg-secondary">{{ "%.2f"|format(tempat.skor_fuzzy) }}</span>
+                  </div>
+                  {% endif %}
+                  
                   <p class="text-muted fw-bold mb-1">Informasi:</p>
                   <p class="text-muted small mb-0">{{ tempat.keterangan }}</p>
                 </div>
