@@ -182,7 +182,7 @@ def tampilkan_tempat_pkl():
             if total_skor >= 0.75:
                 rekomendasi_kategori = "Sangat Direkomendasikan"
             elif total_skor >= 0.5:
-                rekomendasi_kategori = "Direkomendasikan"
+                rekomendasi_kategori = "Dipertimbangkan"
             elif total_skor >= 0.3:
                 rekomendasi_kategori = "Kurang Direkomendasikan"
             else:

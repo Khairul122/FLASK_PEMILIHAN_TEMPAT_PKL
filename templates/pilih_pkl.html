@@ -58,7 +58,7 @@
                   <span class="fw-bold">Rekomendasi:</span>
                   {% if 'Sangat Direkomendasikan' in tempat.rekomendasi %}
                     <span class="badge bg-success">{{ tempat.rekomendasi.split(' - ')[1] }}</span>
-                  {% elif 'Direkomendasikan' in tempat.rekomendasi and 'Kurang' not in tempat.rekomendasi and 'Tidak' not in tempat.rekomendasi %}
+                  {% elif 'Dipertimbangkan' in tempat.rekomendasi and 'Kurang' not in tempat.rekomendasi and 'Tidak' not in tempat.rekomendasi %}
                     <span class="badge bg-primary">{{ tempat.rekomendasi.split(' - ')[1] }}</span>
                   {% elif 'Kurang Direkomendasikan' in tempat.rekomendasi %}
                     <span class="badge bg-warning text-dark">{{ tempat.rekomendasi.split(' - ')[1] }}</span>
