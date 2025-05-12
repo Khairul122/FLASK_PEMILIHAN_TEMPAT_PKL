@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: May 09, 2025 at 12:58 AM
+-- Generation Time: May 12, 2025 at 06:58 AM
 -- Server version: 8.0.30
 -- PHP Version: 8.1.10
 
@@ -97,8 +97,8 @@ CREATE TABLE `mitra` (
 --
 
 INSERT INTO `mitra` (`id`, `nama_perusahaan`, `institusi`, `alamat`, `no_hp`, `email`, `password`, `foto`, `created_at`) VALUES
-(2, 'Unit Smk Muhammadiyah 18', 'Swasta', 'Pangkalan Berandan', '08986525441', 'mitra@gmail.com', '$2b$12$MvAXaoJi1Oxq5pcJx8uBn.Xz9Dida1hNjRtc2O4AgpAynsdvN1V9K', 'logo_smk.png', '2025-04-20 07:50:08'),
-(7, 'Telkom Pangkalan Berandan', 'Pemerintah', 'Pangkalan Berandan', NULL, 'mitra2@gmail.com', '$2b$12$/Sb/GTOlaSY/nDdxtlyGEehIQMJk.LH2n1PjnZqOmjGtmKVKikKl.', NULL, '2025-04-27 06:26:52'),
+(2, 'Unit Smk Muhammadiyah 18', 'Swasta', 'Pangkalan Berandan', '08986525441', 'mitra@gmail.com', '$2b$12$oYtajk1Vh/lWoUmsqmMghu7xdPng4JSBG9SdAexESZ5aWWCdXI0Y2', 'logo_smk.png', '2025-04-20 07:50:08'),
+(7, 'Telkom Pangkalan Berandan', 'Pemerintah', 'Pangkalan Berandan', NULL, 'mitra2@gmail.com', '$2b$12$oYtajk1Vh/lWoUmsqmMghu7xdPng4JSBG9SdAexESZ5aWWCdXI0Y2', NULL, '2025-04-27 06:26:52'),
 (8, 'Malikussaleh University', 'Pemerintah', 'Lhoksuemawe', '082165443677', 'aji@gmail.com', '$2b$12$oYtajk1Vh/lWoUmsqmMghu7xdPng4JSBG9SdAexESZ5aWWCdXI0Y2', NULL, '2025-05-08 23:00:27');
 
 -- --------------------------------------------------------
@@ -148,32 +148,77 @@ CREATE TABLE `tempat_pkl` (
   `deskripsi` text COLLATE utf8mb4_general_ci NOT NULL,
   `mitra_id` int DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `jarak` decimal(10,2) DEFAULT NULL
+  `jarak` decimal(10,2) DEFAULT NULL,
+  `label_durasi` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `label_fasilitas` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `label_kuota` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `label_jarak` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `tempat_pkl`
 --
 
-INSERT INTO `tempat_pkl` (`id`, `foto`, `nama_tempat`, `institusi`, `bidang_pekerjaan`, `fasilitas`, `durasi`, `kuota`, `alamat`, `deskripsi`, `mitra_id`, `created_at`, `jarak`) VALUES
-(39, 'telkom_brandan.jpg', 'Telkom Pangkalan Berandan', 'Pemerintah', 'Jaringan', 'Komputer, internet, Perangkat Jaringan, Printer, Scanner', '2 Bulan, 5x Seminggu', 5, 'Pangkalan Berandan', 'Bagus', 2, '2025-04-23 13:10:57', '0.28'),
-(40, 'telkom_binjai.jpg', 'Telkom Kendati Binjai', 'Pemerintah', 'Jaringan', 'Komputer, internet, Perangkat Jaringan, Printer, Scanner', '2 Bulan, 5x Seminggu', 5, 'Binjai', 'mantap', 2, '2025-04-23 15:17:51', NULL),
-(41, 'samsat_brandan.jpg', 'Samsat Pangkalan Berandan', 'Pemerintah', 'Multimedia', 'Komputer, internet, Printer, Scanner', '2 Bulan, 5x Seminggu', 4, 'Pangkalan Berandan', '4', 2, '2025-04-24 04:33:49', NULL),
-(42, 'smp_bangun_mulia.jpg', 'SMP Swasta Bangun Mulia', 'Pemerintah', 'Administrasi', 'Komputer, internet, Printer', '2 Bulan, 6x Seminggu', 2, 'Pangkalan Berandan', ' Bagus', 2, '2025-04-27 03:22:50', '2.00'),
-(43, 'kantor_pos.jpg', 'Kantor POS Pangkalan Berandan', 'Pemerintah', 'Administrasi, Multimedia', 'Komputer, Printer', '2 Bulan, 5x Seminggu', 3, 'Pangkalan Berandan', ' Bagus', 2, '2025-04-27 03:28:57', '0.55'),
-(44, 'Pertagas_pangkalan_susu.jpg', 'Pertagas Pangkalan Susu', 'Pemerintah', 'Jaringan', 'Komputer, internet, Perangkat Jaringan, Printer', '2 Bulan, 5x Seminggu', 2, 'Pangkalan Susu', ' Bagus', 2, '2025-04-27 03:38:02', '0.40'),
-(45, 'aneka_digital_studi.jpg', 'Aneka Digital Studio', 'Swasta', 'Jaringan', 'Komputer, internet, Perangkat Jaringan, Printer, Scanner', '2 Bulan, 3x Seminggu', 10, 'Pangkalan Berandan', 'Bagus ', 2, '2025-04-27 03:43:28', '25.00'),
-(46, 'Pltu_susu.jpg', 'PLTU Pangkalan Susu', 'Pemerintah', 'Jaringan', 'Komputer, internet, Perangkat Jaringan, Printer, Scanner', '2 Bulan, 5x Seminggu', 2, 'Pangkalan Susu', 'Bagus ', 2, '2025-04-27 03:49:02', '25.00'),
-(47, 'Lkp_Tifa.jpg', 'LKP Tifa Karya', 'Swasta', 'Jaringan', 'Komputer, internet, Perangkat Jaringan, Printer', '2 Bulan, 3x Seminggu', 13, 'Pangkalan Berandan', ' Bagus', 2, '2025-04-27 03:56:06', '0.35'),
-(48, 'Smk_Muhammadiyah.jpg', 'Unit Produksi SMK Muhammdiyah 18', 'Swasta', 'Jaringan', 'Komputer, internet, Perangkat Jaringan, Printer', '2 Bulan, 6x Seminggu', 15, 'Pangkalan Berandan', 'Bagus ', 2, '2025-04-27 03:58:16', '0.05'),
-(49, 'Rs_pertamina.jpg', 'RS Pertamina P.Berandan', 'Swasta', 'Jaringan', 'Komputer, internet, Perangkat Jaringan, Printer, Scanner', '2 Bulan, 6x Seminggu', 4, 'Pangkalan Berandan', ' Bagus', 2, '2025-04-27 04:01:17', '0.80'),
-(50, 'Camat_babaln.jpg', 'Kantor Kecamatan Babalan', 'Pemerintah', 'Administrasi', 'Komputer, internet, Printer, Scanner', '2 Bulan, 5x Seminggu', 3, 'Pangkalan Berandan', 'Bagus ', 2, '2025-04-27 04:07:03', '4.00'),
-(51, 'camat_seilepan.jpg', 'Kantor Kecamatan Sei Lepan', 'Pemerintah', 'Administrasi', 'Komputer, internet, Printer, Scanner', '2 Bulan, 5x Seminggu', 2, 'Tangkahan Durian', ' Bagus', 2, '2025-04-27 04:12:26', '5.00'),
-(52, 'paluh_manis.jpg', 'Kantor Desa Paluh Manis', 'Pemerintah', 'Administrasi', 'Komputer, internet, Printer', '2 Bulan, 5x Seminggu', 2, 'Gebang', ' Bagus', 2, '2025-04-27 04:13:47', '8.00'),
-(53, 'curai.jpg', 'Kantor Desa Securai Utara', 'Pemerintah', 'Administrasi', 'Komputer, Printer', '2 Bulan, 5x Seminggu', 2, 'Curai Utara', ' Bagus', 2, '2025-04-27 04:19:33', '4.00'),
-(54, 'Pln_brandan.jpg', 'Kantor PLN P.Berandan', 'Pemerintah', 'Administrasi', 'Komputer, internet, Printer, Scanner', '2 Bulan, 5x Seminggu', 3, 'Pangkalan Berandan', 'Bagus ', 2, '2025-04-27 04:28:17', '0.30'),
-(55, 'smp_n1.jpg', 'SMP Negri 1 Babalan', 'Pemerintah', 'Administrasi', 'Komputer, internet, Printer', '2 Bulan, 6x Seminggu', 2, 'Pangkalan Berandan', ' Bagus', 2, '2025-04-27 04:31:16', '0.75'),
-(56, 'negri_2.jpg', 'SMP Negri 2 Babalan', 'Pemerintah', 'Administrasi, Multimedia', 'Komputer, internet, Printer', '2 Bulan, 6x Seminggu', 3, 'Pangkalan Berandan', ' Bagus', 2, '2025-04-27 04:41:05', '0.75');
+INSERT INTO `tempat_pkl` (`id`, `foto`, `nama_tempat`, `institusi`, `bidang_pekerjaan`, `fasilitas`, `durasi`, `kuota`, `alamat`, `deskripsi`, `mitra_id`, `created_at`, `jarak`, `label_durasi`, `label_fasilitas`, `label_kuota`, `label_jarak`) VALUES
+(39, 'telkom_brandan.jpg', 'Telkom Pangkalan Berandan', 'Pemerintah', 'Jaringan', 'Komputer, internet, Perangkat Jaringan, Printer, Scanner', '2 Bulan, 5x Seminggu', 5, 'Pangkalan Berandan', 'Bagus', 2, '2025-04-23 13:10:57', '0.28', 'Panjang', 'Sangat Lengkap', 'Sedang', 'Dekat'),
+(40, 'telkom_binjai.jpg', 'Telkom Kendati Binjai', 'Pemerintah', 'Jaringan', 'Komputer, internet, Perangkat Jaringan, Printer, Scanner', '2 Bulan, 5x Seminggu', 5, 'Binjai', 'mantap', 2, '2025-04-23 15:17:51', '60.00', 'Panjang', 'Sangat Lengkap', 'Sedang', NULL),
+(41, 'samsat_brandan.jpg', 'Samsat Pangkalan Berandan', 'Pemerintah', 'Multimedia', 'Komputer, internet, Printer, Scanner', '2 Bulan, 5x Seminggu', 4, 'Pangkalan Berandan', '4', 2, '2025-04-24 04:33:49', NULL, 'Panjang', 'Sedang', 'Sedang', NULL),
+(42, 'smp_bangun_mulia.jpg', 'SMP Swasta Bangun Mulia', 'Pemerintah', 'Administrasi', 'Komputer, internet, Printer', '2 Bulan, 6x Seminggu', 2, 'Pangkalan Berandan', ' Bagus', 2, '2025-04-27 03:22:50', '2.00', 'Panjang', 'Sedang', 'Sedikit', 'Dekat'),
+(43, 'kantor_pos.jpg', 'Kantor POS Pangkalan Berandan', 'Pemerintah', 'Administrasi, Multimedia', 'Komputer, Printer', '2 Bulan, 5x Seminggu', 3, 'Pangkalan Berandan', ' Bagus', 2, '2025-04-27 03:28:57', '0.55', 'Panjang', 'Kurang', 'Sedikit', 'Dekat'),
+(44, 'Pertagas_pangkalan_susu.jpg', 'Pertagas Pangkalan Susu', 'Pemerintah', 'Jaringan', 'Komputer, internet, Perangkat Jaringan, Printer', '2 Bulan, 5x Seminggu', 2, 'Pangkalan Susu', ' Bagus', 2, '2025-04-27 03:38:02', '0.40', 'Panjang', 'Sedang', 'Sedikit', 'Dekat'),
+(45, 'aneka_digital_studi.jpg', 'Aneka Digital Studio', 'Swasta', 'Jaringan', 'Komputer, internet, Perangkat Jaringan, Printer, Scanner', '2 Bulan, 3x Seminggu', 10, 'Pangkalan Berandan', 'Bagus ', 2, '2025-04-27 03:43:28', '25.00', 'Pendek', 'Sangat Lengkap', 'Banyak', 'Jauh'),
+(46, 'Pltu_susu.jpg', 'PLTU Pangkalan Susu', 'Pemerintah', 'Jaringan', 'Komputer, internet, Perangkat Jaringan, Printer, Scanner', '2 Bulan, 5x Seminggu', 2, 'Pangkalan Susu', 'Bagus ', 2, '2025-04-27 03:49:02', '25.00', 'Panjang', 'Sangat Lengkap', 'Sedikit', 'Jauh'),
+(47, 'Lkp_Tifa.jpg', 'LKP Tifa Karya', 'Swasta', 'Jaringan', 'Komputer, internet, Perangkat_Jaringan, Printer', '2 Bulan, 3x Seminggu', 13, 'Pangkalan Berandan', ' Bagus', 2, '2025-04-27 03:56:06', '0.35', 'Pendek', 'Sedang', 'Banyak', 'Dekat'),
+(48, 'Smk_Muhammadiyah.jpg', 'Unit Produksi SMK Muhammdiyah 18', 'Swasta', 'Jaringan', 'Komputer, internet, Perangkat Jaringan, Printer', '2 Bulan, 6x Seminggu', 15, 'Pangkalan Berandan', 'Bagus ', 2, '2025-04-27 03:58:16', '0.05', 'Panjang', 'Sedang', 'Banyak', 'Dekat'),
+(49, 'Rs_pertamina.jpg', 'RS Pertamina P.Berandan', 'Swasta', 'Jaringan', 'Komputer, internet, Perangkat Jaringan, Printer, Scanner', '2 Bulan, 6x Seminggu', 4, 'Pangkalan Berandan', ' Bagus', 2, '2025-04-27 04:01:17', '0.80', 'Panjang', 'Sangat Lengkap', 'Sedang', 'Dekat'),
+(50, 'Camat_babaln.jpg', 'Kantor Kecamatan Babalan', 'Pemerintah', 'Administrasi', 'Komputer, internet, Printer, Scanner', '2 Bulan, 5x Seminggu', 3, 'Pangkalan Berandan', 'Bagus ', 2, '2025-04-27 04:07:03', '4.00', 'Panjang', 'Sedang', 'Sedikit', 'Dekat'),
+(51, 'camat_seilepan.jpg', 'Kantor Kecamatan Sei Lepan', 'Pemerintah', 'Administrasi', 'Komputer, internet, Printer, Scanner', '2 Bulan, 5x Seminggu', 2, 'Tangkahan Durian', ' Bagus', 2, '2025-04-27 04:12:26', '5.00', 'Panjang', 'Sedang', 'Sedikit', 'Sedang'),
+(52, 'paluh_manis.jpg', 'Kantor Desa Paluh Manis', 'Pemerintah', 'Administrasi', 'Komputer, internet, Printer', '2 Bulan, 5x Seminggu', 2, 'Gebang', ' Bagus', 2, '2025-04-27 04:13:47', '8.00', 'Panjang', 'Sedang', 'Sedikit', 'Sedang'),
+(53, 'curai.jpg', 'Kantor Desa Securai Utara', 'Pemerintah', 'Administrasi', 'Komputer, Printer', '2 Bulan, 5x Seminggu', 2, 'Curai Utara', ' Bagus', 2, '2025-04-27 04:19:33', '4.00', 'Panjang', 'Kurang', 'Sedikit', 'Dekat'),
+(54, 'Pln_brandan.jpg', 'Kantor PLN P.Berandan', 'Pemerintah', 'Administrasi', 'Komputer, internet, Printer, Scanner', '2 Bulan, 5x Seminggu', 3, 'Pangkalan Berandan', 'Bagus ', 2, '2025-04-27 04:28:17', '0.30', 'Panjang', 'Sedang', 'Sedikit', 'Dekat'),
+(55, 'smp_n1.jpg', 'SMP Negri 1 Babalan', 'Pemerintah', 'Administrasi', 'Komputer, internet, Printer', '2 Bulan, 6x Seminggu', 2, 'Pangkalan Berandan', ' Bagus', 2, '2025-04-27 04:31:16', '0.75', 'Panjang', 'Sedang', 'Sedikit', 'Dekat'),
+(56, 'negri_2.jpg', 'SMP Negri 2 Babalan', 'Pemerintah', 'Administrasi, Multimedia', 'Komputer, internet, Printer', '2 Bulan, 6x Seminggu', 3, 'Pangkalan Berandan', ' Bagus', 2, '2025-04-27 04:41:05', '0.75', 'Panjang', 'Sedang', 'Sedikit', 'Dekat');
+
+--
+-- Triggers `tempat_pkl`
+--
+DELIMITER $$
+CREATE TRIGGER `trigger_label_tempat_pkl` BEFORE INSERT ON `tempat_pkl` FOR EACH ROW BEGIN
+  -- Label Durasi
+  SET NEW.label_durasi = CASE
+    WHEN NEW.durasi LIKE '%3x%' THEN 'Pendek'
+    WHEN NEW.durasi LIKE '%4x%' THEN 'Sedang'
+    WHEN NEW.durasi LIKE '%5x%' OR NEW.durasi LIKE '%6x%' THEN 'Panjang'
+    ELSE NULL
+  END;
+
+  -- Label Kuota
+  SET NEW.label_kuota = CASE
+    WHEN NEW.kuota <= 3 THEN 'Sedikit'
+    WHEN NEW.kuota BETWEEN 4 AND 7 THEN 'Sedang'
+    WHEN NEW.kuota >= 8 THEN 'Banyak'
+    ELSE NULL
+  END;
+
+  -- Label Jarak
+  SET NEW.label_jarak = CASE
+    WHEN NEW.jarak < 5 THEN 'Dekat'
+    WHEN NEW.jarak BETWEEN 5 AND 10 THEN 'Sedang'
+    WHEN NEW.jarak > 10 THEN 'Jauh'
+    ELSE NULL
+  END;
+
+  -- Label Fasilitas (jumlah koma + 1)
+  SET @jumlah_fasilitas = LENGTH(NEW.fasilitas) - LENGTH(REPLACE(NEW.fasilitas, ',', '')) + 1;
+  SET NEW.label_fasilitas = CASE
+    WHEN @jumlah_fasilitas <= 2 THEN 'Kurang'
+    WHEN @jumlah_fasilitas BETWEEN 3 AND 4 THEN 'Sedang'
+    WHEN @jumlah_fasilitas >= 5 THEN 'Sangat Lengkap'
+    ELSE NULL
+  END;
+END
+$$
+DELIMITER ;
 
 --
 -- Indexes for dumped tables
@@ -245,7 +290,7 @@ ALTER TABLE `siswa`
 -- AUTO_INCREMENT for table `tempat_pkl`
 --
 ALTER TABLE `tempat_pkl`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=59;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
 
 --
 -- Constraints for dumped tables
