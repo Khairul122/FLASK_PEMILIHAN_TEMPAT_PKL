@@ -4,7 +4,7 @@ from flask_mysqldb import MySQLdb
 from werkzeug.utils import secure_filename
 from datetime import datetime
 import os
-import re
+import itertools
 
 tempat_pkl_siswa_routes = Blueprint('tempat_pkl_siswa_routes', __name__)
 
@@ -14,15 +14,13 @@ def init_tempat_pkl_siswa_routes(mysql):
 
 @tempat_pkl_siswa_routes.route('/pilih-pkl', methods=['POST'])
 def tampilkan_input_user():
-    import itertools
-
     bidang_user = request.form.get('bidang_keahlian', '').strip().lower()
     durasi_user = request.form.get('durasi_pkl', '').strip().lower()
     fasilitas_level_user = request.form.get('fasilitas_level', '').strip().lower()
     kuota_user = request.form.get('kuota', '').strip().lower()
     jarak_user = request.form.get('jarak', '').strip().lower()
 
-    print("\n=== INPUT YANG DIISI USER ===")
+    print(f"\n=== INPUT YANG DIISI USER ===")
     print(f"Bidang Keahlian  : {bidang_user}")
     print(f"Durasi PKL       : {durasi_user}")
     print(f"Fasilitas Level  : {fasilitas_level_user}")
@@ -43,42 +41,171 @@ def tampilkan_input_user():
         "jarak": 0.2,
     }
 
-    def μ_durasi_pendek(x): return max(min((4 - x) / (4 - 3), 1), 0) if 3 <= x < 4 else (1 if x < 3 else 0)
-    def μ_durasi_sedang(x): return max(min((x - 3) / (4 - 3), (5 - x) / (5 - 4)), 0) if 3 < x < 5 else (1 if x == 4 else 0)
-    def μ_durasi_panjang(x): return max(min((x - 4) / (5 - 4), 1), 0) if 4 < x <= 6 else (1 if x > 6 else 0)
+    # Fungsi keanggotaan fuzzy untuk durasi
+    def μ_durasi_pendek(durasi_str):
+        if '3x' in durasi_str:
+            return 1.0
+        elif '4x' in durasi_str:
+            return 0.5
+        elif '5x' in durasi_str:
+            return 0.1
+        else:
+            return 0.0
 
-    def μ_fasilitas_kurang(x): return max(min((3 - x) / (3 - 2), 1), 0) if 2 < x < 3 else (1 if x <= 2 else 0)
-    def μ_fasilitas_sedang(x): return max(min((x - 2) / (3.5 - 2), (5 - x) / (5 - 3.5)), 0) if 2 < x < 5 else (1 if x == 3.5 else 0)
-    def μ_fasilitas_lengkap(x): return max(min((x - 4) / (5 - 4), 1), 0) if 4 < x <= 5 else (1 if x >= 5 else 0)
+    def μ_durasi_sedang(durasi_str):
+        if '4x' in durasi_str:
+            return 1.0
+        elif '3x' in durasi_str or '5x' in durasi_str:
+            return 0.5
+        else:
+            return 0.0
 
-    def μ_kuota_sedikit(x): return max(min((4 - x) / (4 - 3), 1), 0) if 3 < x < 4 else (1 if x <= 3 else 0)
-    def μ_kuota_sedang(x): return max(min((x - 3) / (5.5 - 3), (8 - x) / (8 - 5.5)), 0) if 3 < x < 8 else (1 if x == 5.5 else 0)
-    def μ_kuota_banyak(x): return max(min((x - 7) / (8 - 7), 1), 0) if 7 < x < 8 else (1 if x >= 8 else 0)
+    def μ_durasi_panjang(durasi_str):
+        if '6x' in durasi_str:
+            return 1.0
+        elif '5x' in durasi_str:
+            return 0.8
+        elif '4x' in durasi_str:
+            return 0.2
+        else:
+            return 0.0
 
-    def μ_jarak_dekat(x): return max(min((5 - x) / (5 - 4), 1), 0) if 4 < x < 5 else (1 if x <= 4 else 0)
-    def μ_jarak_sedang(x): return max(min((x - 5) / (7.5 - 5), (10 - x) / (10 - 7.5)), 0) if 5 < x < 10 else (1 if x == 7.5 else 0)
-    def μ_jarak_jauh(x): return max(min((x - 10) / (11 - 10), 1), 0) if 10 < x < 11 else (1 if x >= 11 else 0)
+    # Fungsi keanggotaan fuzzy untuk fasilitas
+    def μ_fasilitas(fasilitas_str, target_level):
+        jumlah_fasilitas = len([f.strip() for f in fasilitas_str.split(',') if f.strip()])
+        
+        if target_level == 'kurang':
+            if jumlah_fasilitas <= 2:
+                return 1.0
+            elif jumlah_fasilitas == 3:
+                return 0.5
+            else:
+                return 0.0
+        elif target_level == 'sedang':
+            if jumlah_fasilitas in [3, 4]:
+                return 1.0
+            elif jumlah_fasilitas in [2, 5]:
+                return 0.5
+            else:
+                return 0.0
+        elif target_level == 'sangat lengkap':
+            if jumlah_fasilitas >= 5:
+                return 1.0
+            elif jumlah_fasilitas == 4:
+                return 0.7
+            elif jumlah_fasilitas == 3:
+                return 0.3
+            else:
+                return 0.0
+        return 0.0
+
+    # Fungsi keanggotaan fuzzy untuk kuota
+    def μ_kuota_sedikit(kuota):
+        if kuota <= 3:
+            return 1.0
+        elif 3 < kuota <= 5:
+            return (5 - kuota) / 2
+        else:
+            return 0.0
+
+    def μ_kuota_sedang(kuota):
+        if 4 <= kuota <= 7:
+            return 1.0
+        elif 2 <= kuota < 4:
+            return (kuota - 2) / 2
+        elif 7 < kuota <= 9:
+            return (9 - kuota) / 2
+        else:
+            return 0.0
+
+    def μ_kuota_banyak(kuota):
+        if kuota >= 8:
+            return 1.0
+        elif 6 <= kuota < 8:
+            return (kuota - 6) / 2
+        else:
+            return 0.0
+
+    # Fungsi keanggotaan fuzzy untuk jarak
+    def μ_jarak_dekat(jarak):
+        if jarak <= 1:
+            return 1.0
+        elif 1 < jarak < 5:
+            return (5 - jarak) / 4
+        else:
+            return 0.0
+
+    def μ_jarak_sedang(jarak):
+        if 5 <= jarak <= 8:
+            return 1.0
+        elif 2 <= jarak < 5:
+            return (jarak - 2) / 3
+        elif 8 < jarak <= 12:
+            return (12 - jarak) / 4
+        else:
+            return 0.0
+
+    def μ_jarak_jauh(jarak):
+        if jarak >= 15:
+            return 1.0
+        elif 10 <= jarak < 15:
+            return (jarak - 10) / 5
+        else:
+            return 0.0
 
     hasil_tempat = []
 
     for tempat in semua_tempat:
-        bidang_score = 1.0 if bidang_user in (tempat['bidang_pekerjaan'] or '').lower() else 0.0
-
-        durasi_str = tempat['durasi']
-        durasi_num = 3 if '3x' in durasi_str else 4 if '4x' in durasi_str else 5 if '5x' in durasi_str else 6 if '6x' in durasi_str else 0
-        durasi_score = μ_durasi_pendek(durasi_num) if durasi_user == 'pendek' else μ_durasi_sedang(durasi_num) if durasi_user == 'sedang' else μ_durasi_panjang(durasi_num)
-
-        fasilitas_count = len([f.strip() for f in (tempat['fasilitas'] or '').split(',') if f.strip()])
-        fasilitas_score = μ_fasilitas_kurang(fasilitas_count) if fasilitas_level_user == 'kurang' else μ_fasilitas_sedang(fasilitas_count) if fasilitas_level_user == 'sedang' else μ_fasilitas_lengkap(fasilitas_count)
-
-        kuota = tempat['kuota'] or 0
-        kuota_score = μ_kuota_sedikit(kuota) if kuota_user == 'sedikit' else μ_kuota_sedang(kuota) if kuota_user == 'sedang' else μ_kuota_banyak(kuota)
-
+        # Skor untuk bidang (similarity antara bidang user dan bidang tempat)
+        if bidang_user and tempat['bidang_pekerjaan']:
+            if bidang_user in tempat['bidang_pekerjaan'].lower():
+                bidang_score = 1.0
+            elif any(b.strip().lower() in bidang_user or bidang_user in b.strip().lower() 
+                    for b in tempat['bidang_pekerjaan'].split(',')):
+                bidang_score = 0.6
+            else:
+                bidang_score = 0.0
+        else:
+            bidang_score = 0.0
+        
+        # Skor durasi (berdasarkan fuzzy membership)
+        if durasi_user == 'pendek':
+            durasi_score = μ_durasi_pendek(tempat['durasi'])
+        elif durasi_user == 'sedang':
+            durasi_score = μ_durasi_sedang(tempat['durasi'])
+        elif durasi_user == 'panjang':
+            durasi_score = μ_durasi_panjang(tempat['durasi'])
+        else:
+            durasi_score = 0.0
+        
+        # Skor fasilitas (berdasarkan fuzzy membership)
+        fasilitas_score = μ_fasilitas(tempat['fasilitas'] or '', fasilitas_level_user)
+        
+        # Skor kuota (berdasarkan fuzzy membership)
+        kuota_nilai = int(tempat['kuota'] or 0)
+        if kuota_user == 'sedikit':
+            kuota_score = μ_kuota_sedikit(kuota_nilai)
+        elif kuota_user == 'sedang':
+            kuota_score = μ_kuota_sedang(kuota_nilai)
+        elif kuota_user == 'banyak':
+            kuota_score = μ_kuota_banyak(kuota_nilai)
+        else:
+            kuota_score = 0.0
+        
+        # Skor jarak (berdasarkan fuzzy membership)
         try:
-            jarak = float(tempat['jarak'])
-        except:
-            jarak = 0.0
-        jarak_score = μ_jarak_dekat(jarak) if jarak_user == 'dekat' else μ_jarak_sedang(jarak) if jarak_user == 'sedang' else μ_jarak_jauh(jarak)
+            jarak_nilai = float(tempat['jarak'] or 0)
+        except (ValueError, TypeError):
+            jarak_nilai = 0
+            
+        if jarak_user == 'dekat':
+            jarak_score = μ_jarak_dekat(jarak_nilai)
+        elif jarak_user == 'sedang':
+            jarak_score = μ_jarak_sedang(jarak_nilai)
+        elif jarak_user == 'jauh':
+            jarak_score = μ_jarak_jauh(jarak_nilai)
+        else:
+            jarak_score = 0.0
 
         skor_kbrs = (
             bobot['bidang'] * bidang_score +
@@ -110,19 +237,21 @@ def tampilkan_input_user():
         for kombinasi in itertools.combinations(himpunan.keys(), 3):
             a, b, c = kombinasi
             nilai_min = min(himpunan[a], himpunan[b], himpunan[c])
-            if nilai_min == 1.0:
+            if nilai_min >= 0.8:
                 kategori = 'sangat_direkomendasikan'
             elif nilai_min >= 0.5:
                 kategori = 'direkomendasikan'
-            elif nilai_min > 0:
+            elif nilai_min >= 0.2:
                 kategori = 'kurang_direkomendasikan'
+            elif nilai_min > 0:
+                kategori = 'tidak_direkomendasikan'
             else:
                 continue
 
             rule_strengths.append((nilai_min, kategori))
             rule_detail.append({
                 'rule': f"Rule-{rule_id}",
-                'kombinasi': f"IF {a} AND {b} AND {c} THEN {kategori.replace('_', ' ').capitalize()}",
+                'kombinasi': f"IF {a} ({himpunan[a]:.2f}) AND {b} ({himpunan[b]:.2f}) AND {c} ({himpunan[c]:.2f}) THEN {kategori.replace('_', ' ').capitalize()}",
                 'α_predikat': round(nilai_min, 4)
             })
             rule_id += 1
@@ -130,13 +259,12 @@ def tampilkan_input_user():
         if rule_strengths:
             numerator = sum(s * kategori_output[k] for s, k in rule_strengths)
             denominator = sum(s for s, _ in rule_strengths)
-            skor_fuzzy_normalized = (numerator / denominator) / 5  # NORMALISASI KE 0–1
+            skor_fuzzy_normalized = (numerator / denominator) / 5
         else:
             skor_fuzzy_normalized = 0.0
 
         skor_hybrid = (skor_kbrs + skor_fuzzy_normalized) / 2
 
-        # THRESHOLD UNTUK RENTANG 0–1
         if skor_hybrid >= 0.75:
             rekomendasi = "Sangat Direkomendasikan"
         elif skor_hybrid >= 0.5:
@@ -144,21 +272,23 @@ def tampilkan_input_user():
         elif skor_hybrid >= 0.3:
             rekomendasi = "Kurang Direkomendasikan"
         else:
-            rekomendasi = "Tidak Rekomendasi"
+            rekomendasi = "Tidak Direkomendasikan"
 
-        tempat['skor_kbrs'] = skor_kbrs
-        tempat['skor_fuzzy'] = skor_fuzzy_normalized
-        tempat['score'] = skor_hybrid
+        tempat['skor_kbrs'] = round(skor_kbrs, 3)
+        tempat['skor_fuzzy'] = round(skor_fuzzy_normalized, 3)
+        tempat['score'] = round(skor_hybrid, 3)
         tempat['rekomendasi'] = rekomendasi
-        tempat['nilai_keanggotaan'] = himpunan
+        tempat['nilai_keanggotaan'] = {k: round(v, 3) for k, v in himpunan.items()}
         tempat['rules_terpicu'] = rule_detail
 
-        print(f"{tempat['nama_tempat']}: KBRS = {skor_kbrs}, Fuzzy = {skor_fuzzy_normalized}, Hybrid = {skor_hybrid} → {rekomendasi}")
+        print(f"{tempat['nama_tempat']}: KBRS = {skor_kbrs:.3f}, Fuzzy = {skor_fuzzy_normalized:.3f}, Hybrid = {skor_hybrid:.3f} → {rekomendasi}")
         for r in rule_detail:
             print(f"{r['rule']}: {r['kombinasi']}, α = {r['α_predikat']}")
 
         hasil_tempat.append(tempat)
 
+    # Urutkan hasil berdasarkan skor (dari tinggi ke rendah)
+    hasil_tempat.sort(key=lambda x: x['score'], reverse=True)
     return render_template('pilih_pkl.html', data_tempat_pkl=hasil_tempat)
 
 
@@ -239,15 +369,7 @@ def rekomendasi_tempat_pkl():
     fasilitas = request.form.getlist('fasilitas')
     durasi = request.form.get('durasi')
     kuota = request.form.get('kuota')
-
-    def kuota_to_category(kuota_angka):
-        kuota_angka = int(kuota_angka)
-        if kuota_angka < 5:
-            return "sedikit"
-        elif 5 <= kuota_angka <= 10:
-            return "sedang"
-        else:
-            return "banyak"
+    jarak = request.form.get('jarak')
 
     query_params = []
     query = "SELECT * FROM tempat_pkl WHERE 1=1"
@@ -269,39 +391,126 @@ def rekomendasi_tempat_pkl():
 
     hasil_rekomendasi = []
 
-    for tempat in all_tempat_pkl:
-        bidang_similarity = 0
-        if bidang and tempat['bidang_pekerjaan']:
-            if bidang.lower() in tempat['bidang_pekerjaan'].lower():
-                bidang_similarity = 1
-            elif any(b.strip().lower() in bidang.lower() for b in tempat['bidang_pekerjaan'].split(',')):
-                bidang_similarity = 0.7
-                
-        tempat_fasilitas = tempat['fasilitas'].split(',') if tempat['fasilitas'] else []
-        match_fasilitas = len(set(fasilitas) & set(tempat_fasilitas)) / max(len(fasilitas), 1) if fasilitas else 0
-        
-        durasi_match = 1 if durasi and str(tempat['durasi']) == durasi else 0
-        
-        kategori_kuota = kuota_to_category(tempat['kuota'])
-        kategori_user = 'sedikit' if kuota == '1' else 'sedang' if kuota == '2' else 'banyak'
-        kuota_match = 1 if kategori_kuota == kategori_user else 0
-        
-        try:
-            jarak_tempat = float(tempat.get('jarak') or 0)
-        except (ValueError, TypeError):
-            jarak_tempat = 0
+    # Fungsi fuzzy untuk kemiripan bidang
+    def bidang_similarity_fuzzy(bidang_tempat, bidang_user):
+        if not bidang_user or not bidang_tempat:
+            return 0.0
             
-        jarak_score = 1 if jarak_tempat < 5 else 0.6 if 5 <= jarak_tempat <= 10 else 0.2
+        if bidang_user.lower() in bidang_tempat.lower():
+            return 1.0
         
+        # Cek kemiripan berdasarkan kata individual
+        bidang_tempat_keywords = [k.strip().lower() for k in bidang_tempat.split(',')]
+        bidang_user_keywords = [k.strip().lower() for k in bidang_user.split(',')]
+        
+        matches = sum(1 for k1 in bidang_user_keywords for k2 in bidang_tempat_keywords if k1 in k2 or k2 in k1)
+        total_keywords = max(len(bidang_user_keywords), 1)
+        
+        return min(matches / total_keywords, 1.0)
+    
+    # Fungsi fuzzy untuk kemiripan fasilitas
+    def fasilitas_similarity_fuzzy(fasilitas_tempat, fasilitas_user):
+        if not fasilitas_user or not fasilitas_tempat:
+            return 0.0
+            
+        fasilitas_tempat_list = [f.strip().lower() for f in fasilitas_tempat.split(',')]
+        fasilitas_user_list = [f.strip().lower() for f in fasilitas_user]
+        
+        # Hitung jumlah fasilitas yang cocok (dengan pencocokan parsial)
+        matches = 0
+        for f_user in fasilitas_user_list:
+            best_match = max([1.0 if f_user in f_tempat or f_tempat in f_user else 0.0 for f_tempat in fasilitas_tempat_list], default=0.0)
+            matches += best_match
+            
+        return min(matches / max(len(fasilitas_user_list), 1), 1.0)
+    
+    # Fungsi fuzzy untuk kemiripan kuota
+    def kuota_similarity_fuzzy(kuota_tempat, kuota_option):
+        if not kuota_option:
+            return 0.0
+            
+        kuota_nilai = int(kuota_tempat or 0)
+        
+        if kuota_option == '1':  # Sedikit
+            if kuota_nilai <= 3:
+                return 1.0
+            elif 3 < kuota_nilai <= 5:
+                return (5 - kuota_nilai) / 2
+            else:
+                return 0.0
+        elif kuota_option == '2':  # Sedang
+            if 4 <= kuota_nilai <= 7:
+                return 1.0
+            elif 2 <= kuota_nilai < 4:
+                return (kuota_nilai - 2) / 2
+            elif 7 < kuota_nilai <= 9:
+                return (9 - kuota_nilai) / 2
+            else:
+                return 0.0
+        elif kuota_option == '3':  # Banyak
+            if kuota_nilai >= 8:
+                return 1.0
+            elif 6 <= kuota_nilai < 8:
+                return (kuota_nilai - 6) / 2
+            else:
+                return 0.0
+        else:
+            return 0.0
+    
+    # Fungsi fuzzy untuk kemiripan jarak
+    def jarak_similarity_fuzzy(jarak_tempat, jarak_option):
+        if not jarak_option:
+            return 0.0
+            
+        try:
+            jarak_nilai = float(jarak_tempat or 0)
+        except (ValueError, TypeError):
+            jarak_nilai = 0.0
+            
+        if jarak_option == '1':  # Dekat
+            if jarak_nilai <= 1:
+                return 1.0
+            elif 1 < jarak_nilai < 5:
+                return (5 - jarak_nilai) / 4
+            else:
+                return 0.0
+        elif jarak_option == '2':  # Sedang
+            if 5 <= jarak_nilai <= 8:
+                return 1.0
+            elif 2 <= jarak_nilai < 5:
+                return (jarak_nilai - 2) / 3
+            elif 8 < jarak_nilai <= 12:
+                return (12 - jarak_nilai) / 4
+            else:
+                return 0.0
+        elif jarak_option == '3':  # Jauh
+            if jarak_nilai >= 15:
+                return 1.0
+            elif 10 <= jarak_nilai < 15:
+                return (jarak_nilai - 10) / 5
+            else:
+                return 0.0
+        else:
+            return 0.0
+
+    for tempat in all_tempat_pkl:
+        bidang_sim = bidang_similarity_fuzzy(tempat['bidang_pekerjaan'], bidang)
+        fasilitas_sim = fasilitas_similarity_fuzzy(tempat['fasilitas'], fasilitas)
+        
+        durasi_match = 1.0 if durasi and str(tempat['durasi']) == durasi else 0.0
+        
+        kuota_sim = kuota_similarity_fuzzy(tempat['kuota'], kuota)
+        jarak_sim = jarak_similarity_fuzzy(tempat['jarak'], jarak)
+            
         similarity_score = (
-            0.35 * bidang_similarity + 
-            0.20 * match_fasilitas + 
+            0.35 * bidang_sim + 
+            0.20 * fasilitas_sim + 
             0.15 * durasi_match + 
-            0.15 * kuota_match + 
-            0.15 * jarak_score
+            0.15 * kuota_sim + 
+            0.15 * jarak_sim
         )
 
-        tempat['score'] = round(similarity_score, 2)
+        tempat['score'] = round(similarity_score, 3)
         
         if similarity_score >= 0.75:
             kategori = "Sangat Direkomendasikan"
@@ -315,20 +524,17 @@ def rekomendasi_tempat_pkl():
         tempat['rekomendasi'] = kategori
         
         keterangan = []
-        if bidang_similarity > 0:
-            keterangan.append(f"bidang {bidang}")
-        if match_fasilitas > 0:
-            keterangan.append(f"fasilitas sesuai {int(match_fasilitas*100)}%")
+        if bidang_sim > 0:
+            keterangan.append(f"bidang {bidang} (kecocokan: {int(bidang_sim*100)}%)")
+        if fasilitas_sim > 0:
+            keterangan.append(f"fasilitas sesuai {int(fasilitas_sim*100)}%")
         if durasi_match > 0:
-            keterangan.append(f"durasi sesuai")
-        if kuota_match > 0:
-            keterangan.append(f"kuota {kategori_kuota}")
-        if jarak_tempat < 5:
-            keterangan.append(f"jarak dekat ({jarak_tempat} km)")
-        elif 5 <= jarak_tempat <= 10:
-            keterangan.append(f"jarak sedang ({jarak_tempat} km)")
-        else:
-            keterangan.append(f"jarak jauh ({jarak_tempat} km)")
+            keterangan.append(f"durasi sesuai 100%")
+        if kuota_sim > 0:
+            keterangan.append(f"kuota kecocokan {int(kuota_sim*100)}%")
+        if jarak_sim > 0:
+            jarak_value = tempat.get('jarak', 0)
+            keterangan.append(f"jarak {jarak_value} km (kecocokan: {int(jarak_sim*100)}%)")
             
         tempat['keterangan'] = f"{kategori}: {', '.join(keterangan)}"
         hasil_rekomendasi.append(tempat)
