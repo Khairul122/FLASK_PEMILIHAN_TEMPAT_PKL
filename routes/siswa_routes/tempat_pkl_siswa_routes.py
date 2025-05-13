@@ -79,7 +79,6 @@ def ajukan_lamaran(tempat_id):
     flash("Lamaran berhasil diajukan!", "success")
     return redirect(url_for('riwayat_lamaran_siswa_routes.kegiatanku'))
 @tempat_pkl_siswa_routes.route('/pilih-pkl', methods=['POST'])
-
 def tampilkan_input_user():
     bidang_user = request.form.get('bidang_keahlian', '').strip().lower()
     durasi_user = request.form.get('durasi_pkl', '').strip().lower()
@@ -137,9 +136,9 @@ def tampilkan_input_user():
         sim_durasi = max(0, 1 - 0.5 * diff_durasi)
         sim_fasilitas = max(0, 1 - 0.5 * diff_fasilitas)
         sim_kuota = max(0, 1 - 0.5 * diff_kuota)
-        sim_jarak = max(0, 1 - 0.5 * diff_jarak)
+        sim_jarak = max(0, 1 - 0.25 * diff_jarak)
 
-        mu_tinggi = min(sim_bidang, sim_durasi, sim_fasilitas, sim_kuota, sim_jarak)
+        mu_tinggi = (sim_bidang * 0.4 + sim_durasi * 0.15 + sim_fasilitas * 0.2 + sim_kuota * 0.15 + sim_jarak * 0.1)
         mu_sedang = (sim_bidang + sim_durasi + sim_fasilitas + sim_kuota + sim_jarak) / 5
         mu_rendah = 1 - mu_tinggi
 
@@ -150,9 +149,9 @@ def tampilkan_input_user():
 
         hybrid_score = (skor_kbrs + fuzzy_score / 100) / 2
 
-        if fuzzy_score >= 85:
+        if hybrid_score >= 0.75:
             label_output = 'Direkomendasikan'
-        elif fuzzy_score >= 60:
+        elif hybrid_score >= 0.60:
             label_output = 'Dipertimbangkan'
         else:
             label_output = 'Tidak Direkomendasikan'
@@ -166,7 +165,9 @@ def tampilkan_input_user():
         print(f"Skor KBRS  : {skor_kbrs:.2f}")
         print(f"Skor Fuzzy : {fuzzy_score:.2f}")
         print(f"Skor Hybrid: {hybrid_score:.2f}")
+        print(f"Rekomendasi: {label_output}")
         print("-------------------------------------------")
 
+    hasil_tempat_sorted = sorted(hasil_tempat, key=lambda x: x['skor_hybrid'], reverse=True)
     flash('Perhitungan KBRS + Fuzzy Mamdani selesai', 'info')
-    return render_template('pilih_pkl.html', data_tempat_pkl=hasil_tempat)
+    return render_template('pilih_pkl.html', data_tempat_pkl=hasil_tempat_sorted)
