@@ -1,534 +1,16 @@
-
-
 from flask import Blueprint, render_template, session, flash, redirect, url_for, request
 from flask import current_app as app
 from flask_mysqldb import MySQLdb
 from werkzeug.utils import secure_filename
 from datetime import datetime
 import os
-import re
+import numpy as np
 
 tempat_pkl_siswa_routes = Blueprint('tempat_pkl_siswa_routes', __name__)
 
 def init_tempat_pkl_siswa_routes(mysql):
     global db
     db = mysql
-
-    
-
-# @tempat_pkl_siswa_routes.route('/pilih-pkl')
-# def tampilkan_tempat_pkl():
-#     cursor = db.connection.cursor(MySQLdb.cursors.DictCursor)
-#     cursor.execute("SELECT * FROM tempat_pkl")
-#     data_tempat_pkl = cursor.fetchall()
-#     cursor.close()
-#     return render_template('pilih_pkl.html', data_tempat_pkl=data_tempat_pkl)
-
-
-
-import re
-
-@tempat_pkl_siswa_routes.route('/pilih-pkl', methods=['GET', 'POST'])
-def tampilkan_tempat_pkl():
-    if request.method == 'POST':
-        bidang_user = request.form.get('bidang_keahlian', '').strip().lower()
-        durasi_user = request.form.get('durasi_pkl', '').strip().lower()
-        fasilitas_level_user = request.form.get('fasilitas_level', '').strip().lower()
-        kuota_user = request.form.get('kuota', '').strip().lower()
-        jarak_user = request.form.get('jarak', '').strip().lower()
-
-        print("\n=== PREPARATION INPUT USER ===")
-        print(f"Bidang dipilih     : {bidang_user}")
-        print(f"Durasi dipilih     : {durasi_user}")
-        print(f"Fasilitas dipilih  : {fasilitas_level_user}")
-        print(f"Kuota dipilih      : {kuota_user}")
-        print(f"Jarak dipilih      : {jarak_user}")
-        print("===============================\n")
-
-        cursor = db.connection.cursor(MySQLdb.cursors.DictCursor)
-        
-        # Jika user memilih bidang, gunakan query dengan filter LIKE
-        if bidang_user:
-            cursor.execute("SELECT * FROM tempat_pkl WHERE LOWER(bidang_pekerjaan) LIKE %s", (f'%{bidang_user}%',))
-        else:
-            cursor.execute("SELECT * FROM tempat_pkl")
-        
-        semua_tempat = cursor.fetchall()
-        cursor.close()
-
-        # Definisi bobot KBRS - total bobot harus 1.0
-        bobot = {
-            "bidang": 0.3,
-            "durasi": 0.15,
-            "fasilitas": 0.2,
-            "kuota": 0.15,
-            "jarak": 0.2,
-        }
-
-        hasil_rekomendasi = []
-
-        # ============== FUNGSI FUZZY MEMBERSHIP ==============
-        def get_bidang_membership(input_value):
-            # input_value = True jika bidang cocok, False jika tidak
-            return {"cocok": 1.0, "tidak_cocok": 0.0} if input_value else {"cocok": 0.0, "tidak_cocok": 1.0}
-        
-        def get_durasi_membership(durasi_value):
-            # durasi dalam satuan bulan
-            memberships = {"pendek": 0.0, "sedang": 0.0, "panjang": 0.0}
-            
-            # Pendek: 0-3 bulan
-            if durasi_value <= 0:
-                memberships["pendek"] = 0.0
-            elif durasi_value <= 2:
-                memberships["pendek"] = 1.0
-            elif durasi_value <= 3:
-                memberships["pendek"] = (3 - durasi_value) / 1.0
-            else:
-                memberships["pendek"] = 0.0
-                
-            # Sedang: 2-5 bulan
-            if durasi_value <= 2:
-                memberships["sedang"] = 0.0
-            elif durasi_value <= 3.5:
-                memberships["sedang"] = (durasi_value - 2) / 1.5
-            elif durasi_value <= 5:
-                memberships["sedang"] = (5 - durasi_value) / 1.5
-            else:
-                memberships["sedang"] = 0.0
-                
-            # Panjang: 4+ bulan
-            if durasi_value <= 4:
-                memberships["panjang"] = 0.0
-            elif durasi_value <= 6:
-                memberships["panjang"] = (durasi_value - 4) / 2.0
-            else:
-                memberships["panjang"] = 1.0
-                
-            return memberships
-        
-        def get_fasilitas_membership(fasilitas_count):
-            # fasilitas_count adalah jumlah fasilitas yang tersedia
-            memberships = {"kurang": 0.0, "sedang": 0.0, "lengkap": 0.0}
-            
-            # Kurang: 0-3 fasilitas
-            if fasilitas_count <= 0:
-                memberships["kurang"] = 1.0
-            elif fasilitas_count <= 2:
-                memberships["kurang"] = 1.0
-            elif fasilitas_count < 3:
-                memberships["kurang"] = (3 - fasilitas_count)
-            else:
-                memberships["kurang"] = 0.0
-                
-            # Sedang: 2-5 fasilitas
-            if fasilitas_count <= 2:
-                memberships["sedang"] = 0.0
-            elif fasilitas_count <= 3.5:
-                memberships["sedang"] = (fasilitas_count - 2) / 1.5
-            elif fasilitas_count < 5:
-                memberships["sedang"] = (5 - fasilitas_count) / 1.5
-            else:
-                memberships["sedang"] = 0.0
-                
-            # Lengkap: 4+ fasilitas
-            if fasilitas_count <= 3:
-                memberships["lengkap"] = 0.0
-            elif fasilitas_count <= 5:
-                memberships["lengkap"] = (fasilitas_count - 3) / 2.0
-            else:
-                memberships["lengkap"] = 1.0
-                
-            return memberships
-        
-        def get_kuota_membership(kuota_value):
-            # kuota dalam jumlah orang
-            memberships = {"sedikit": 0.0, "sedang": 0.0, "banyak": 0.0}
-            
-            # Sedikit: 0-5 orang
-            if kuota_value <= 0:
-                memberships["sedikit"] = 1.0
-            elif kuota_value <= 3:
-                memberships["sedikit"] = 1.0
-            elif kuota_value < 5:
-                memberships["sedikit"] = (5 - kuota_value) / 2.0
-            else:
-                memberships["sedikit"] = 0.0
-                
-            # Sedang: 4-11 orang
-            if kuota_value <= 4:
-                memberships["sedang"] = 0.0
-            elif kuota_value <= 7.5:
-                memberships["sedang"] = (kuota_value - 4) / 3.5
-            elif kuota_value < 11:
-                memberships["sedang"] = (11 - kuota_value) / 3.5
-            else:
-                memberships["sedang"] = 0.0
-                
-            # Banyak: 9+ orang
-            if kuota_value <= 9:
-                memberships["banyak"] = 0.0
-            elif kuota_value <= 15:
-                memberships["banyak"] = (kuota_value - 9) / 6.0
-            else:
-                memberships["banyak"] = 1.0
-                
-            return memberships
-        
-        def get_jarak_membership(jarak_value):
-            # jarak dalam kilometer
-            memberships = {"dekat": 0.0, "sedang": 0.0, "jauh": 0.0}
-            
-            # Dekat: 0-1.5 km
-            if jarak_value <= 0:
-                memberships["dekat"] = 1.0
-            elif jarak_value <= 0.8:
-                memberships["dekat"] = 1.0
-            elif jarak_value < 1.5:
-                memberships["dekat"] = (1.5 - jarak_value) / 0.7
-            else:
-                memberships["dekat"] = 0.0
-                
-            # Sedang: 1-6 km
-            if jarak_value <= 1:
-                memberships["sedang"] = 0.0
-            elif jarak_value <= 3.5:
-                memberships["sedang"] = (jarak_value - 1) / 2.5
-            elif jarak_value < 6:
-                memberships["sedang"] = (6 - jarak_value) / 2.5
-            else:
-                memberships["sedang"] = 0.0
-                
-            # Jauh: 5+ km
-            if jarak_value <= 5:
-                memberships["jauh"] = 0.0
-            elif jarak_value <= 10:
-                memberships["jauh"] = (jarak_value - 5) / 5.0
-            else:
-                memberships["jauh"] = 1.0
-                
-            return memberships
-        
-        # ============== FUNGSI DEFUZZIFIKASI ==============
-        def defuzzify_mamdani(rule_strengths, output_categories):
-            # Output categories menggunakan Center of Gravity (COG)
-            # output_categories = {kategori: nilai_crisp}
-            if not rule_strengths:
-                return 3  # Default value jika tidak ada rule yang terpicu
-            
-            # Defuzzifikasi dengan metode centroid (COG)
-            numerator = 0
-            denominator = 0
-            
-            for strength in rule_strengths:
-                for category, value in output_categories.items():
-                    numerator += strength * value
-                    denominator += strength
-            
-            if denominator == 0:
-                return 3  # Default value jika denominator nol
-                
-            return numerator / denominator
-
-        for tempat in semua_tempat:
-            # ============= KBRS CALCULATION =============
-            # Hitung skor bidang
-            bidang_cocok = False
-            if bidang_user and bidang_user in (tempat.get('bidang_pekerjaan') or '').lower():
-                bidang_cocok = True
-                cocok_bidang = 5  # Skor maksimal jika bidang cocok
-            else:
-                cocok_bidang = 1  # Skor minimal jika bidang tidak cocok
-            
-            bidang_fuzzy = 'cocok' if bidang_cocok else 'tidak cocok'
-            
-            # Hitung skor durasi
-            durasi_raw = tempat.get('durasi') or ''
-            durasi_tempat = 0
-            match = re.search(r'(\d+)\s*x', durasi_raw)
-            if match:
-                try:
-                    durasi_tempat = int(match.group(1))
-                except ValueError:
-                    durasi_tempat = 0
-            
-            # Transformasikan durasi ke linguistik
-            if durasi_tempat <= 3:
-                durasi_fuzzy = 'pendek'
-            elif durasi_tempat <= 5:
-                durasi_fuzzy = 'sedang'
-            else:
-                durasi_fuzzy = 'panjang'
-            
-            durasi_score = 5 if durasi_fuzzy == durasi_user else 1
-            
-            # Hitung skor fasilitas
-            fasilitas_tempat = [f.strip().lower() for f in (tempat.get('fasilitas') or '').split(',')]
-            fasilitas_match_count = len(set(fasilitas_tempat))
-            
-            if fasilitas_match_count <= 2:
-                fasilitas_fuzzy = 'kurang'
-            elif fasilitas_match_count <= 4:
-                fasilitas_fuzzy = 'sedang'
-            else:
-                fasilitas_fuzzy = 'lengkap'
-                
-            fasilitas_score = 5 if fasilitas_fuzzy == fasilitas_level_user else 1
-            
-            # Hitung skor kuota
-            try:
-                kuota_tempat = int(tempat.get('kuota') or 0)
-            except (ValueError, TypeError):
-                kuota_tempat = 0
-                
-            if kuota_tempat < 5:
-                kuota_fuzzy = 'sedikit'
-            elif 5 <= kuota_tempat <= 10:
-                kuota_fuzzy = 'sedang'
-            else:
-                kuota_fuzzy = 'banyak'
-                
-            kuota_score = 5 if kuota_fuzzy == kuota_user else 1
-            
-            # Hitung skor jarak
-            try:
-                jarak_tempat = float(tempat.get('jarak') or 0)
-            except (ValueError, TypeError):
-                jarak_tempat = 0
-                
-            if jarak_tempat <= 1:
-                jarak_fuzzy = 'dekat'
-            elif jarak_tempat <= 5:
-                jarak_fuzzy = 'sedang'
-            else:
-                jarak_fuzzy = 'jauh'
-                
-            jarak_score = 5 if jarak_fuzzy == jarak_user else 1
-            
-            # Hitung total skor KBRS
-            skor_kbrs = (
-                bobot['bidang'] * (cocok_bidang / 5) +
-                bobot['durasi'] * (durasi_score / 5) +
-                bobot['fasilitas'] * (fasilitas_score / 5) +
-                bobot['kuota'] * (kuota_score / 5) +
-                bobot['jarak'] * (jarak_score / 5)
-            )
-            
-            # ============= FUZZY MAMDANI CALCULATION =============
-            # 1. Fuzzifikasi input
-            bidang_membership = get_bidang_membership(bidang_cocok)
-            durasi_membership = get_durasi_membership(durasi_tempat)
-            fasilitas_membership = get_fasilitas_membership(fasilitas_match_count)
-            kuota_membership = get_kuota_membership(kuota_tempat)
-            jarak_membership = get_jarak_membership(jarak_tempat)
-            
-            # Menampilkan nilai membership function untuk debugging
-            print(f"\n--- MEMBERSHIP FUNCTION untuk {tempat.get('nama_tempat','Unknown')} ---")
-            print(f"Bidang: {bidang_membership}")
-            print(f"Durasi: {durasi_membership}")
-            print(f"Fasilitas: {fasilitas_membership}")
-            print(f"Kuota: {kuota_membership}")
-            print(f"Jarak: {jarak_membership}")
-            
-            # 2. Fuzzy Rule Evaluation
-            # Definisikan output categories untuk defuzzifikasi
-            output_categories = {
-                "not_recommended": 1,
-                "less_recommended": 2, 
-                "recommended": 4,
-                "highly_recommended": 5
-            }
-            
-            rule_strengths = []
-            rule_evaluations = []
-            
-            # Rule 1: IF jarak dekat AND kuota banyak THEN highly_recommended
-            rule1 = min(jarak_membership["dekat"], kuota_membership["banyak"])
-            if rule1 > 0:
-                rule_strengths.append(rule1)
-                rule_evaluations.append(("R1", rule1, "highly_recommended"))
-            
-            # Rule 2: IF jarak sedang AND kuota sedang THEN recommended
-            rule2 = min(jarak_membership["sedang"], kuota_membership["sedang"])
-            if rule2 > 0:
-                rule_strengths.append(rule2)
-                rule_evaluations.append(("R2", rule2, "recommended"))
-            
-            # Rule 3: IF jarak jauh AND kuota sedikit THEN not_recommended
-            rule3 = min(jarak_membership["jauh"], kuota_membership["sedikit"])
-            if rule3 > 0:
-                rule_strengths.append(rule3)
-                rule_evaluations.append(("R3", rule3, "not_recommended"))
-            
-            # Rule 4: IF fasilitas lengkap AND durasi panjang THEN highly_recommended
-            rule4 = min(fasilitas_membership["lengkap"], durasi_membership["panjang"])
-            if rule4 > 0:
-                rule_strengths.append(rule4)
-                rule_evaluations.append(("R4", rule4, "highly_recommended"))
-            
-            # Rule 5: IF fasilitas sedang AND durasi sedang THEN recommended
-            rule5 = min(fasilitas_membership["sedang"], durasi_membership["sedang"])
-            if rule5 > 0:
-                rule_strengths.append(rule5)
-                rule_evaluations.append(("R5", rule5, "recommended"))
-            
-            # Rule 6: IF fasilitas kurang AND durasi pendek THEN less_recommended
-            rule6 = min(fasilitas_membership["kurang"], durasi_membership["pendek"])
-            if rule6 > 0:
-                rule_strengths.append(rule6)
-                rule_evaluations.append(("R6", rule6, "less_recommended"))
-            
-            # Rule 7: IF bidang cocok AND fasilitas lengkap THEN highly_recommended
-            rule7 = min(bidang_membership["cocok"], fasilitas_membership["lengkap"])
-            if rule7 > 0:
-                rule_strengths.append(rule7)
-                rule_evaluations.append(("R7", rule7, "highly_recommended"))
-            
-            # Rule 8: IF bidang cocok AND durasi panjang THEN highly_recommended
-            rule8 = min(bidang_membership["cocok"], durasi_membership["panjang"])
-            if rule8 > 0:
-                rule_strengths.append(rule8)
-                rule_evaluations.append(("R8", rule8, "highly_recommended"))
-            
-            # Rule 9: IF bidang cocok AND kuota banyak THEN highly_recommended
-            rule9 = min(bidang_membership["cocok"], kuota_membership["banyak"])
-            if rule9 > 0:
-                rule_strengths.append(rule9)
-                rule_evaluations.append(("R9", rule9, "highly_recommended"))
-            
-            # Rule 10: IF bidang cocok AND jarak dekat THEN highly_recommended
-            rule10 = min(bidang_membership["cocok"], jarak_membership["dekat"])
-            if rule10 > 0:
-                rule_strengths.append(rule10)
-                rule_evaluations.append(("R10", rule10, "highly_recommended"))
-            
-            # Rule 11: IF bidang tidak_cocok AND jarak jauh THEN not_recommended
-            rule11 = min(bidang_membership["tidak_cocok"], jarak_membership["jauh"])
-            if rule11 > 0:
-                rule_strengths.append(rule11)
-                rule_evaluations.append(("R11", rule11, "not_recommended"))
-            
-            # Rule 12: IF fasilitas kurang AND jarak jauh THEN not_recommended
-            rule12 = min(fasilitas_membership["kurang"], jarak_membership["jauh"])
-            if rule12 > 0:
-                rule_strengths.append(rule12)
-                rule_evaluations.append(("R12", rule12, "not_recommended"))
-            
-            # Tampilkan rule evaluation untuk debugging
-            print(f"\n--- RULE EVALUATION untuk {tempat.get('nama_tempat','Unknown')} ---")
-            for rule_id, strength, category in rule_evaluations:
-                print(f"{rule_id}: {strength:.4f} -> {category}")
-            
-            # 3. Agregasi dan Defuzzifikasi
-            # Menggunakan metode centroid untuk defuzzifikasi
-            defuzzified_score = defuzzify_mamdani(rule_strengths, output_categories)
-            
-            # Normalisasi skor fuzzy ke skala 0-1
-            defuzzified_normalized = max(0.2, defuzzified_score / 5)
-            
-            # Gabungkan skor KBRS dan fuzzy dengan bobot yang sama
-            total_skor = round((skor_kbrs + defuzzified_normalized) / 2, 4)
-            
-            # Debug output
-            print(f"[{tempat.get('nama_tempat','Unknown')}] KBRS: {skor_kbrs:.4f}, Fuzzy: {defuzzified_score:.4f}, Normalized: {defuzzified_normalized:.4f}, Total: {total_skor:.4f}")
-            
-            # Kategori rekomendasi berdasarkan total skor
-            if total_skor >= 0.75:
-                rekomendasi_kategori = "Sangat Direkomendasikan"
-            elif total_skor >= 0.5:
-                rekomendasi_kategori = "Direkomendasikan"
-            elif total_skor >= 0.3:
-                rekomendasi_kategori = "Kurang Direkomendasikan"
-            else:
-                rekomendasi_kategori = "Tidak Direkomendasikan"
-                
-            # Label bidang
-            bidang_label = "Sesuai Bidang" if bidang_fuzzy == 'cocok' else "Di Luar Bidang"
-            
-            # Buat detail keterangan untuk setiap tempat
-            keterangan_detail = []
-            
-            # Tambahkan keterangan bidang jika user memilih bidang
-            if bidang_user and bidang_fuzzy == 'cocok':
-                keterangan_detail.append(f"bidang {bidang_user}")
-            
-            # Keterangan fasilitas
-            keterangan_detail.append(f"fasilitas {fasilitas_fuzzy}")
-                
-            # Keterangan kuota
-            keterangan_detail.append(f"kuota {kuota_fuzzy}")
-            
-            # Keterangan jarak
-            keterangan_detail.append(f"jarak {jarak_fuzzy}")
-            
-            # Tambahkan alasan tidak direkomendasikan
-            if rekomendasi_kategori == "Tidak Direkomendasikan":
-                if jarak_fuzzy == 'jauh':
-                    keterangan_detail.append("jarak terlalu jauh")
-                if kuota_fuzzy == 'sedikit':
-                    keterangan_detail.append("kuota terlalu sedikit")
-            
-            keterangan = f"{rekomendasi_kategori}: {', '.join(keterangan_detail)}"
-                
-            rekomendasi_label = f"{bidang_label} - {rekomendasi_kategori}"
-            
-            if total_skor > 0:
-                tempat['score'] = total_skor
-                tempat['rekomendasi'] = rekomendasi_label
-                tempat['keterangan'] = keterangan
-                hasil_rekomendasi.append(tempat)
-        
-        # Sort hasil rekomendasi berdasarkan skor tertinggi
-        hasil_rekomendasi.sort(key=lambda x: x['score'], reverse=True)
-        return render_template('pilih_pkl.html', data_tempat_pkl=hasil_rekomendasi)
-        
-    else:
-        # Untuk GET request, ambil semua data dan tambahkan keterangan default
-        cursor = db.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute("SELECT * FROM tempat_pkl")
-        semua_tempat = cursor.fetchall()
-        cursor.close()
-        
-        for tempat in semua_tempat:
-            # Membuat keterangan dasar untuk tampilan awal
-            fasilitas_tempat = [f.strip().lower() for f in (tempat.get('fasilitas') or '').split(',')]
-            fasilitas_count = len(set(fasilitas_tempat))
-            
-            if fasilitas_count <= 2:
-                fasilitas_desc = "fasilitas kurang"
-            elif fasilitas_count <= 4:
-                fasilitas_desc = "fasilitas sedang"
-            else:
-                fasilitas_desc = "fasilitas lengkap"
-                
-            try:
-                kuota_tempat = int(tempat.get('kuota') or 0)
-            except (ValueError, TypeError):
-                kuota_tempat = 0
-                
-            if kuota_tempat < 5:
-                kuota_desc = "kuota sedikit"
-            elif 5 <= kuota_tempat <= 10:
-                kuota_desc = "kuota sedang"
-            else:
-                kuota_desc = "kuota banyak"
-                
-            try:
-                jarak_tempat = float(tempat.get('jarak') or 0)
-            except (ValueError, TypeError):
-                jarak_tempat = 0
-                
-            if jarak_tempat <= 1:
-                jarak_desc = "jarak dekat"
-            elif jarak_tempat <= 5:
-                jarak_desc = "jarak sedang"
-            else:
-                jarak_desc = "jarak jauh"
-                
-            tempat['keterangan'] = f"Detail: {fasilitas_desc}, {kuota_desc}, {jarak_desc}"
-            
-        return render_template('pilih_pkl.html', data_tempat_pkl=semua_tempat)
-
-
 
 @tempat_pkl_siswa_routes.route('/')
 def temapt_pkl_scrolbar():
@@ -538,22 +20,9 @@ def temapt_pkl_scrolbar():
     cursor.close()
     return render_template('index.html', data_tempat_pkl=data_tempat_pkl)
 
-
-
-
-# @tempat_pkl_siswa_routes.route('/detail-tempat-pkl/<int:id>')
-# def detail_tempat_pkl(id):
-#     cursor = db.connection.cursor(MySQLdb.cursors.DictCursor)
-#     cursor.execute("SELECT * FROM tempat_pkl WHERE id = %s", (id,))
-#     data_tempat_pkl = cursor.fetchone()
-#     cursor.close()
-#     return render_template('detail_tempat_pkl.html', data_tempat_pkl=data_tempat_pkl)
-
-
 @tempat_pkl_siswa_routes.route('/detail-tempat-pkl/<int:id>')
 def detail_tempat_pkl(id):
     cursor = db.connection.cursor(MySQLdb.cursors.DictCursor)
-    # Query join antara tempat_pkl dan mitra untuk mendapatkan nama_perusahaan
     query = """
     SELECT t.*, m.nama_perusahaan
     FROM tempat_pkl t
@@ -564,7 +33,6 @@ def detail_tempat_pkl(id):
     data_tempat_pkl = cursor.fetchone()
     cursor.close()
     return render_template('detail_tempat_pkl.html', data_tempat_pkl=data_tempat_pkl)
-
 
 @tempat_pkl_siswa_routes.route('/ajukan-lamaran/<int:tempat_id>', methods=['POST'])
 def ajukan_lamaran(tempat_id):
@@ -585,7 +53,6 @@ def ajukan_lamaran(tempat_id):
     uploads_path = os.path.join('static', 'dokumen')
     os.makedirs(uploads_path, exist_ok=True)
 
-    # Simpan file
     surat_filename = secure_filename(surat_pengantar.filename)
     cv_filename = secure_filename(cv.filename)
     kartu_filename = secure_filename(kartu_pelajar.filename)
@@ -594,7 +61,6 @@ def ajukan_lamaran(tempat_id):
     cv.save(os.path.join(uploads_path, cv_filename))
     kartu_pelajar.save(os.path.join(uploads_path, kartu_filename))
 
-    # Simpan nama file (bukan path lengkap) ke database
     cursor = db.connection.cursor()
     insert_query = """
     INSERT INTO lamaran_pkl (siswa_id, tempat_pkl_id, surat_pengantar, cv, kartu_pelajar, tanggal_lamaran, status)
@@ -614,62 +80,339 @@ def ajukan_lamaran(tempat_id):
     flash("Lamaran berhasil diajukan!", "success")
     return redirect(url_for('riwayat_lamaran_siswa_routes.kegiatanku'))
 
-@tempat_pkl_siswa_routes.route('/rekomendasi-tempat-pkl', methods=['POST'])
-def rekomendasi_tempat_pkl():
-    cursor = db.connection.cursor(MySQLdb.cursors.DictCursor)
+def hitung_skor_kbrs(bidang_user, durasi_user, fasilitas_level_user, kuota_user, jarak_user, tempat):
+    bobot = {
+        'bidang': 0.3,
+        'durasi': 0.15,
+        'fasilitas': 0.2,
+        'kuota': 0.15,
+        'jarak': 0.2
+    }
+    
+    cocok_bidang = 1 if bidang_user == tempat['bidang_pekerjaan'].lower() else 0
+    cocok_durasi = 1 if durasi_user == tempat['label_durasi'].lower() else 0
+    cocok_fasilitas = 1 if fasilitas_level_user == tempat['label_fasilitas'].lower() else 0
+    cocok_kuota = 1 if kuota_user == tempat['label_kuota'].lower() else 0
+    cocok_jarak = 1 if jarak_user == tempat['label_jarak'].lower() else 0
+    
+    skor_kbrs = (
+        bobot['bidang'] * cocok_bidang +
+        bobot['durasi'] * cocok_durasi +
+        bobot['fasilitas'] * cocok_fasilitas +
+        bobot['kuota'] * cocok_kuota +
+        bobot['jarak'] * cocok_jarak
+    )
+    
+    return skor_kbrs
 
-    # Ambil data dari form
-    institusi = request.form.get('institusi')
-    bidang = request.form.get('bidang_pekerjaan')
-    fasilitas = request.form.getlist('fasilitas')  # list
-    durasi = request.form.get('durasi')
-    kuota = request.form.get('kuota')
+def trapesium_membership(x, a, b, c, d):
+    if x <= a or x >= d:
+        return 0
+    elif a < x <= b:
+        return (x - a) / (b - a)
+    elif b < x <= c:
+        return 1
+    elif c < x < d:
+        return (d - x) / (d - c)
+    return 0
 
-    def kuota_to_category(kuota_angka):
-        kuota_angka = int(kuota_angka)
-        if kuota_angka < 5:
-            return "sedikit"
-        elif 5 <= kuota_angka <= 10:
-            return "sedang"
+def segitiga_membership(x, a, b, c):
+    if x <= a or x >= c:
+        return 0
+    elif a < x <= b:
+        return (x - a) / (b - a)
+    elif b < x < c:
+        return (c - x) / (c - b)
+    return 0
+
+def liner_naik(x, a, b):
+    if x <= a:
+        return 0
+    elif x >= b:
+        return 1
+    else:
+        return (x - a) / (b - a)
+
+def liner_turun(x, a, b):
+    if x <= a:
+        return 1
+    elif x >= b:
+        return 0
+    else:
+        return (b - x) / (b - a)
+
+def fuzzifikasi_bidang(bidang_user, bidang_tempat):
+    return 1.0 if bidang_user == bidang_tempat else 0.0
+
+def fuzzifikasi_durasi(durasi_value):
+    durasi_map = {'pendek': 1, 'sedang': 2, 'panjang': 3}
+    
+    if isinstance(durasi_value, str):
+        durasi_value = durasi_map.get(durasi_value.lower(), 0)
+    
+    pendek = liner_turun(durasi_value, 1, 2)
+    sedang = segitiga_membership(durasi_value, 1, 2, 3)
+    panjang = liner_naik(durasi_value, 2, 3)
+    
+    return {'pendek': pendek, 'sedang': sedang, 'panjang': panjang}
+
+def fuzzifikasi_fasilitas(fasilitas_value):
+    fasilitas_map = {'kurang': 1, 'cukup': 2, 'lengkap': 3, 'sedang': 2, 'sangat lengkap': 4}
+    
+    if isinstance(fasilitas_value, str):
+        fasilitas_value = fasilitas_map.get(fasilitas_value.lower(), 0)
+    
+    kurang = liner_turun(fasilitas_value, 1, 2)
+    cukup = segitiga_membership(fasilitas_value, 1, 2, 3)
+    lengkap = segitiga_membership(fasilitas_value, 2, 3, 4)
+    sangat_lengkap = liner_naik(fasilitas_value, 3, 4)
+    
+    return {'kurang': kurang, 'cukup': cukup, 'lengkap': lengkap, 'sangat lengkap': sangat_lengkap}
+
+def fuzzifikasi_kuota(kuota_value):
+    kuota_map = {'sedikit': 1, 'sedang': 2, 'banyak': 3}
+    
+    if isinstance(kuota_value, str):
+        kuota_value = kuota_map.get(kuota_value.lower(), 0)
+    
+    sedikit = liner_turun(kuota_value, 1, 2)
+    sedang = segitiga_membership(kuota_value, 1, 2, 3)
+    banyak = liner_naik(kuota_value, 2, 3)
+    
+    return {'sedikit': sedikit, 'sedang': sedang, 'banyak': banyak}
+
+def fuzzifikasi_jarak(jarak_value):
+    jarak_map = {'dekat': 1, 'sedang': 2, 'jauh': 3}
+    
+    if isinstance(jarak_value, str):
+        jarak_value = jarak_map.get(jarak_value.lower(), 0)
+    
+    dekat = liner_turun(jarak_value, 1, 2)
+    sedang = segitiga_membership(jarak_value, 1, 2, 3)
+    jauh = liner_naik(jarak_value, 2, 3)
+    
+    return {'dekat': dekat, 'sedang': sedang, 'jauh': jauh}
+
+def hitung_similarity_linguistik(user_value, tempat_value):
+    if user_value == tempat_value:
+        return 1.0
+    
+    linguistic_map = {
+        'durasi': ['pendek', 'sedang', 'panjang'],
+        'fasilitas': ['kurang', 'cukup', 'lengkap', 'sangat lengkap'],
+        'kuota': ['sedikit', 'sedang', 'banyak'],
+        'jarak': ['dekat', 'sedang', 'jauh']
+    }
+    
+    for category, values in linguistic_map.items():
+        if user_value in values and tempat_value in values:
+            user_idx = values.index(user_value)
+            tempat_idx = values.index(tempat_value)
+            max_distance = len(values) - 1
+            distance = abs(user_idx - tempat_idx)
+            return 1 - (distance / max_distance)
+    
+    return 0.0
+
+def inferensi_mamdani(user_prefrence, tempat_values):
+    bidang_match = 1.0 if user_prefrence['bidang'] == tempat_values['bidang'] else 0.0
+    
+    similarity = {
+        'durasi': hitung_similarity_linguistik(user_prefrence['durasi'], tempat_values['durasi']),
+        'fasilitas': hitung_similarity_linguistik(user_prefrence['fasilitas'], tempat_values['fasilitas']),
+        'kuota': hitung_similarity_linguistik(user_prefrence['kuota'], tempat_values['kuota']),
+        'jarak': hitung_similarity_linguistik(user_prefrence['jarak'], tempat_values['jarak'])
+    }
+    
+    hasil_tidak_rekomendasi = 0
+    hasil_pertimbangkan = 0
+    hasil_rekomendasi = 0
+    
+    if bidang_match == 0:
+        hasil_tidak_rekomendasi = 1.0
+        return {
+            "Tidak Direkomendasikan": hasil_tidak_rekomendasi,
+            "Dipertimbangkan": 0,
+            "Direkomendasikan": 0
+        }
+    
+    similarity_total = sum(similarity.values()) / len(similarity)
+    
+    if similarity_total >= 0.8:
+        hasil_rekomendasi = similarity_total
+    elif similarity_total >= 0.5:
+        hasil_pertimbangkan = similarity_total
+    else:
+        hasil_tidak_rekomendasi = 1 - similarity_total
+    
+    hasil_rekomendasi = min(1.0, hasil_rekomendasi)
+    hasil_pertimbangkan = min(1.0, hasil_pertimbangkan)
+    hasil_tidak_rekomendasi = min(1.0, hasil_tidak_rekomendasi)
+    
+    kriteria_weights = {
+        'durasi': 0.15,
+        'fasilitas': 0.25,
+        'kuota': 0.15,
+        'jarak': 0.45
+    }
+    
+    weighted_similarity = sum(similarity[key] * kriteria_weights[key] for key in similarity)
+    
+    if weighted_similarity >= 0.7:
+        hasil_rekomendasi = weighted_similarity
+        hasil_pertimbangkan = 0.3
+        hasil_tidak_rekomendasi = 0
+    elif weighted_similarity >= 0.4:
+        hasil_rekomendasi = 0
+        hasil_pertimbangkan = weighted_similarity
+        hasil_tidak_rekomendasi = 0.2
+    else:
+        hasil_rekomendasi = 0
+        hasil_pertimbangkan = 0.3
+        hasil_tidak_rekomendasi = 1 - weighted_similarity
+    
+    return {
+        "Tidak Direkomendasikan": hasil_tidak_rekomendasi,
+        "Dipertimbangkan": hasil_pertimbangkan,
+        "Direkomendasikan": hasil_rekomendasi
+    }
+
+def defuzzifikasi_centroid(inferensi_output, num_points=100):
+    x_range = np.linspace(0, 100, num_points)
+    
+    numerator = 0
+    denominator = 0
+    
+    for x in x_range:
+        if x <= 40:
+            mu = min(inferensi_output["Tidak Direkomendasikan"], trapesium_membership(x, 0, 10, 30, 40))
+        elif 40 < x <= 70:
+            mu = min(inferensi_output["Dipertimbangkan"], trapesium_membership(x, 40, 50, 60, 70))
         else:
-            return "banyak"
+            mu = min(inferensi_output["Direkomendasikan"], trapesium_membership(x, 70, 80, 90, 100))
+        
+        if mu > 0:
+            numerator += x * mu
+            denominator += mu
+    
+    if denominator == 0:
+        return 50  
+    
+    return numerator / denominator
 
-    # Ambil tempat PKL yang sesuai institusi (filter dari awal di query)
-    cursor.execute("SELECT * FROM tempat_pkl WHERE institusi = %s", (institusi,))
-    all_tempat_pkl = cursor.fetchall()
+def get_rekomendasi_label(nilai):
+    if nilai >= 0.6 or nilai >= 75:
+        return "Direkomendasikan"
+    elif nilai >= 0.5 or nilai >= 40:
+        return "Dipertimbangkan"
+    else:
+        return "Tidak Direkomendasikan"
 
-    hasil_rekomendasi = []
+@tempat_pkl_siswa_routes.route('/pilih-pkl', methods=['POST'])
+def tampilkan_input_user():
+    bidang_user = request.form.get('bidang_keahlian', '').strip().lower()
+    durasi_user = request.form.get('durasi_pkl', '').strip().lower()
+    fasilitas_level_user = request.form.get('fasilitas_level', '').strip().lower()
+    kuota_user = request.form.get('kuota', '').strip().lower()
+    jarak_user = request.form.get('jarak', '').strip().lower()
 
-    for tempat in all_tempat_pkl:
-        score = 0
+    print("\n=== INPUT YANG DIISI USER ===")
+    print(f"Bidang Keahlian  : {bidang_user}")
+    print(f"Durasi PKL       : {durasi_user}")
+    print(f"Fasilitas Level  : {fasilitas_level_user}")
+    print(f"Kuota            : {kuota_user}")
+    print(f"Jarak            : {jarak_user}")
+    print("================================\n")
 
-        # Similarity institusi (sudah pasti 1 karena hasil query sudah disaring)
-        s1 = 1
-
-        # Similarity bidang
-        s2 = 1 if str(tempat['bidang_pekerjaan']) == bidang else 0
-
-        # Similarity fasilitas
-        tempat_fasilitas = tempat['fasilitas'].split(',') if tempat['fasilitas'] else []
-        match_fasilitas = len(set(fasilitas) & set(tempat_fasilitas)) / len(fasilitas) if fasilitas else 0
-        s3 = match_fasilitas
-
-        # Similarity durasi
-        s4 = 1 if str(tempat['durasi']) == durasi else 0
-
-        # Similarity kuota (kategori)
-        kategori_kuota = kuota_to_category(tempat['kuota'])
-        kategori_user = 'sedikit' if kuota == '1' else 'sedang' if kuota == '2' else 'banyak'
-        s5 = 1 if kategori_kuota == kategori_user else 0
-
-        # Total skor
-        similarity_score = 0.20 * s1 + 0.25 * s2 + 0.20 * s3 + 0.15 * s4 + 0.20 * s5
-
-        tempat['score'] = round(similarity_score, 2)
-        hasil_rekomendasi.append(tempat)
-
-    # Urutkan hasil rekomendasi berdasarkan skor
-    hasil_rekomendasi.sort(key=lambda x: x['score'], reverse=True)
-
+    cursor = db.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute("SELECT * FROM tempat_pkl")
+    hasil_tempat = cursor.fetchall()
     cursor.close()
-    return render_template('pilih_pkl.html', data_tempat_pkl=hasil_rekomendasi)
+
+    direkomendasikan = []
+    dipertimbangkan = []
+    tidak_direkomendasikan = []
+
+    user_preferences = {
+        'bidang': bidang_user,
+        'durasi': durasi_user,
+        'fasilitas': fasilitas_level_user,
+        'kuota': kuota_user,
+        'jarak': jarak_user
+    }
+
+    for tempat in hasil_tempat:
+        # Skor KBRS
+        skor_kbrs = hitung_skor_kbrs(
+            bidang_user, durasi_user, fasilitas_level_user, kuota_user, jarak_user, tempat
+        )
+
+        # Fuzzy Mamdani - directly compare user preferences with location values
+        tempat_values = {
+            'bidang': tempat['bidang_pekerjaan'].lower(),
+            'durasi': tempat['label_durasi'].lower(),
+            'fasilitas': tempat['label_fasilitas'].lower(),
+            'kuota': tempat['label_kuota'].lower(),
+            'jarak': tempat['label_jarak'].lower()
+        }
+        
+        print(f"\nTempat: {tempat['nama_tempat']}")
+        print(f"User durasi: {durasi_user}, Tempat durasi: {tempat_values['durasi']}")
+        print(f"User fasilitas: {fasilitas_level_user}, Tempat fasilitas: {tempat_values['fasilitas']}")
+        print(f"User kuota: {kuota_user}, Tempat kuota: {tempat_values['kuota']}")
+        print(f"User jarak: {jarak_user}, Tempat jarak: {tempat_values['jarak']}")
+        
+        # Calculate similarity for visualization
+        similarity = {
+            'bidang': 1.0 if bidang_user == tempat_values['bidang'] else 0.0,
+            'durasi': hitung_similarity_linguistik(durasi_user, tempat_values['durasi']),
+            'fasilitas': hitung_similarity_linguistik(fasilitas_level_user, tempat_values['fasilitas']),
+            'kuota': hitung_similarity_linguistik(kuota_user, tempat_values['kuota']),
+            'jarak': hitung_similarity_linguistik(jarak_user, tempat_values['jarak'])
+        }
+
+        # Run the Mamdani fuzzy inference
+        inferensi_output = inferensi_mamdani(user_preferences, tempat_values)
+        nilai_mamdani = defuzzifikasi_centroid(inferensi_output)
+        
+        print(f"Inferensi output: {inferensi_output}")
+        print(f"Nilai Mamdani: {nilai_mamdani}")
+        
+        skor_mamdani_normalized = nilai_mamdani / 100
+        hybrid_score = (skor_kbrs + skor_mamdani_normalized) / 2
+
+        # Simpan skor dan label
+        tempat['skor_kbrs'] = round(skor_kbrs, 2)
+        tempat['skor_mamdani'] = round(nilai_mamdani, 2)
+        tempat['skor_hybrid'] = round(hybrid_score, 2)
+        tempat['label_rekomendasi'] = get_rekomendasi_label(hybrid_score)
+
+        # Simpan nilai keanggotaan untuk ditampilkan di chart
+        tempat['nilai_keanggotaan'] = similarity
+
+        # Cetak log
+        print(f"Tempat: {tempat['nama_tempat']}")
+        print(f"Skor KBRS      : {skor_kbrs:.2f}")
+        print(f"Skor Mamdani   : {nilai_mamdani:.2f}")
+        print(f"Skor Hybrid    : {hybrid_score:.2f}")
+        print(f"Rekomendasi    : {tempat['label_rekomendasi']}")
+        print("-------------------------------------------")
+
+        # Kategorisasi rekomendasi
+        if tempat['label_rekomendasi'] == 'Direkomendasikan':
+            direkomendasikan.append(tempat)
+        elif tempat['label_rekomendasi'] == 'Dipertimbangkan':
+            dipertimbangkan.append(tempat)
+        else:
+            tidak_direkomendasikan.append(tempat)
+
+    hasil_tempat_sorted = sorted(hasil_tempat, key=lambda x: x['skor_hybrid'], reverse=True)
+    flash('Perhitungan KBRS + Fuzzy Mamdani selesai', 'info')
+
+    return render_template(
+        'pilih_pkl.html',
+        data_tempat_pkl=hasil_tempat_sorted,
+        direkomendasikan=direkomendasikan,
+        dipertimbangkan=dipertimbangkan,
+        tidak_direkomendasikan=tidak_direkomendasikan
+    )
