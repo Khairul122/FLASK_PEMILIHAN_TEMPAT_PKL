@@ -80,7 +80,6 @@ def ajukan_lamaran(tempat_id):
     flash("Lamaran berhasil diajukan!", "success")
     return redirect(url_for('riwayat_lamaran_siswa_routes.kegiatanku'))
 
-# Fungsi untuk metode KBRS
 def hitung_skor_kbrs(bidang_user, durasi_user, fasilitas_level_user, kuota_user, jarak_user, tempat):
     bobot = {
         'bidang': 0.3,
@@ -106,7 +105,6 @@ def hitung_skor_kbrs(bidang_user, durasi_user, fasilitas_level_user, kuota_user,
     
     return skor_kbrs
 
-# Fuzzy Mamdani Tradisional
 def trapesium_membership(x, a, b, c, d):
     if x <= a or x >= d:
         return 0
@@ -144,9 +142,7 @@ def liner_turun(x, a, b):
         return (b - x) / (b - a)
 
 def fuzzifikasi_bidang(bidang_user, bidang_tempat):
-    if bidang_user == bidang_tempat:
-        return 1.0
-    return 0.0
+    return 1.0 if bidang_user == bidang_tempat else 0.0
 
 def fuzzifikasi_durasi(durasi_value):
     durasi_map = {'pendek': 1, 'sedang': 2, 'panjang': 3}
@@ -161,7 +157,7 @@ def fuzzifikasi_durasi(durasi_value):
     return {'pendek': pendek, 'sedang': sedang, 'panjang': panjang}
 
 def fuzzifikasi_fasilitas(fasilitas_value):
-    fasilitas_map = {'kurang': 1, 'cukup': 2, 'lengkap': 3, 'sangat lengkap': 4}
+    fasilitas_map = {'kurang': 1, 'cukup': 2, 'lengkap': 3, 'sedang': 2, 'sangat lengkap': 4}
     
     if isinstance(fasilitas_value, str):
         fasilitas_value = fasilitas_map.get(fasilitas_value.lower(), 0)
@@ -197,154 +193,83 @@ def fuzzifikasi_jarak(jarak_value):
     
     return {'dekat': dekat, 'sedang': sedang, 'jauh': jauh}
 
-def inferensi_mamdani(fuzzy_bidang, fuzzy_durasi, fuzzy_fasilitas, fuzzy_kuota, fuzzy_jarak):
-    rules = [
-        {"kondisi": [True, 'pendek', 'kurang', 'sedikit', 'dekat'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'pendek', 'kurang', 'sedikit', 'sedang'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'pendek', 'kurang', 'sedikit', 'jauh'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'pendek', 'kurang', 'sedang', 'dekat'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'pendek', 'kurang', 'sedang', 'sedang'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'pendek', 'kurang', 'sedang', 'jauh'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'pendek', 'kurang', 'banyak', 'dekat'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'pendek', 'kurang', 'banyak', 'sedang'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'pendek', 'kurang', 'banyak', 'jauh'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'pendek', 'cukup', 'sedikit', 'dekat'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'pendek', 'cukup', 'sedikit', 'sedang'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'pendek', 'cukup', 'sedikit', 'jauh'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'pendek', 'cukup', 'sedang', 'dekat'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'pendek', 'cukup', 'sedang', 'sedang'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'pendek', 'cukup', 'sedang', 'jauh'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'pendek', 'cukup', 'banyak', 'dekat'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'pendek', 'cukup', 'banyak', 'sedang'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'pendek', 'cukup', 'banyak', 'jauh'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'pendek', 'lengkap', 'sedikit', 'dekat'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'pendek', 'lengkap', 'sedikit', 'sedang'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'pendek', 'lengkap', 'sedikit', 'jauh'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'pendek', 'lengkap', 'sedang', 'dekat'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'pendek', 'lengkap', 'sedang', 'sedang'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'pendek', 'lengkap', 'sedang', 'jauh'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'pendek', 'lengkap', 'banyak', 'dekat'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'pendek', 'lengkap', 'banyak', 'sedang'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'pendek', 'lengkap', 'banyak', 'jauh'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'pendek', 'sangat lengkap', 'sedikit', 'dekat'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'pendek', 'sangat lengkap', 'sedikit', 'sedang'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'pendek', 'sangat lengkap', 'sedikit', 'jauh'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'pendek', 'sangat lengkap', 'sedang', 'dekat'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'pendek', 'sangat lengkap', 'sedang', 'sedang'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'pendek', 'sangat lengkap', 'sedang', 'jauh'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'pendek', 'sangat lengkap', 'banyak', 'dekat'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'pendek', 'sangat lengkap', 'banyak', 'sedang'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'pendek', 'sangat lengkap', 'banyak', 'jauh'], "hasil": "Direkomendasikan"},
-        
-        {"kondisi": [True, 'sedang', 'kurang', 'sedikit', 'dekat'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'sedang', 'kurang', 'sedikit', 'sedang'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'sedang', 'kurang', 'sedikit', 'jauh'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'sedang', 'kurang', 'sedang', 'dekat'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'sedang', 'kurang', 'sedang', 'sedang'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'sedang', 'kurang', 'sedang', 'jauh'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'sedang', 'kurang', 'banyak', 'dekat'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'sedang', 'kurang', 'banyak', 'sedang'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'sedang', 'kurang', 'banyak', 'jauh'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'sedang', 'cukup', 'sedikit', 'dekat'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'sedang', 'cukup', 'sedikit', 'sedang'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'sedang', 'cukup', 'sedikit', 'jauh'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'sedang', 'cukup', 'sedang', 'dekat'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'sedang', 'cukup', 'sedang', 'sedang'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'sedang', 'cukup', 'sedang', 'jauh'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'sedang', 'cukup', 'banyak', 'dekat'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'sedang', 'cukup', 'banyak', 'sedang'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'sedang', 'cukup', 'banyak', 'jauh'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'sedang', 'lengkap', 'sedikit', 'dekat'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'sedang', 'lengkap', 'sedikit', 'sedang'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'sedang', 'lengkap', 'sedikit', 'jauh'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'sedang', 'lengkap', 'sedang', 'dekat'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'sedang', 'lengkap', 'sedang', 'sedang'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'sedang', 'lengkap', 'sedang', 'jauh'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'sedang', 'lengkap', 'banyak', 'dekat'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'sedang', 'lengkap', 'banyak', 'sedang'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'sedang', 'lengkap', 'banyak', 'jauh'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'sedang', 'sangat lengkap', 'sedikit', 'dekat'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'sedang', 'sangat lengkap', 'sedikit', 'sedang'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'sedang', 'sangat lengkap', 'sedikit', 'jauh'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'sedang', 'sangat lengkap', 'sedang', 'dekat'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'sedang', 'sangat lengkap', 'sedang', 'sedang'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'sedang', 'sangat lengkap', 'sedang', 'jauh'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'sedang', 'sangat lengkap', 'banyak', 'dekat'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'sedang', 'sangat lengkap', 'banyak', 'sedang'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'sedang', 'sangat lengkap', 'banyak', 'jauh'], "hasil": "Direkomendasikan"},
-        
-        {"kondisi": [True, 'panjang', 'kurang', 'sedikit', 'dekat'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'panjang', 'kurang', 'sedikit', 'sedang'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'panjang', 'kurang', 'sedikit', 'jauh'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'panjang', 'kurang', 'sedang', 'dekat'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'panjang', 'kurang', 'sedang', 'sedang'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'panjang', 'kurang', 'sedang', 'jauh'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'panjang', 'kurang', 'banyak', 'dekat'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'panjang', 'kurang', 'banyak', 'sedang'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'panjang', 'kurang', 'banyak', 'jauh'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'panjang', 'cukup', 'sedikit', 'dekat'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'panjang', 'cukup', 'sedikit', 'sedang'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'panjang', 'cukup', 'sedikit', 'jauh'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [True, 'panjang', 'cukup', 'sedang', 'dekat'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'panjang', 'cukup', 'sedang', 'sedang'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'panjang', 'cukup', 'sedang', 'jauh'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'panjang', 'cukup', 'banyak', 'dekat'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'panjang', 'cukup', 'banyak', 'sedang'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'panjang', 'cukup', 'banyak', 'jauh'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'panjang', 'lengkap', 'sedikit', 'dekat'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'panjang', 'lengkap', 'sedikit', 'sedang'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'panjang', 'lengkap', 'sedikit', 'jauh'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'panjang', 'lengkap', 'sedang', 'dekat'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'panjang', 'lengkap', 'sedang', 'sedang'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'panjang', 'lengkap', 'sedang', 'jauh'], "hasil": "Dipertimbangkan"},
-        {"kondisi": [True, 'panjang', 'lengkap', 'banyak', 'dekat'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'panjang', 'lengkap', 'banyak', 'sedang'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'panjang', 'lengkap', 'banyak', 'jauh'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'panjang', 'sangat lengkap', 'sedikit', 'dekat'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'panjang', 'sangat lengkap', 'sedikit', 'sedang'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'panjang', 'sangat lengkap', 'sedikit', 'jauh'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'panjang', 'sangat lengkap', 'sedang', 'dekat'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'panjang', 'sangat lengkap', 'sedang', 'sedang'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'panjang', 'sangat lengkap', 'sedang', 'jauh'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'panjang', 'sangat lengkap', 'banyak', 'dekat'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'panjang', 'sangat lengkap', 'banyak', 'sedang'], "hasil": "Direkomendasikan"},
-        {"kondisi": [True, 'panjang', 'sangat lengkap', 'banyak', 'jauh'], "hasil": "Direkomendasikan"},
-        
-        {"kondisi": [False, 'pendek', 'kurang', 'sedikit', 'dekat'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [False, 'pendek', 'lengkap', 'banyak', 'dekat'], "hasil": "Tidak Direkomendasikan"},
-        {"kondisi": [False, 'panjang', 'sangat lengkap', 'banyak', 'dekat'], "hasil": "Tidak Direkomendasikan"},
-    ]
+def hitung_similarity_linguistik(user_value, tempat_value):
+    if user_value == tempat_value:
+        return 1.0
+    
+    linguistic_map = {
+        'durasi': ['pendek', 'sedang', 'panjang'],
+        'fasilitas': ['kurang', 'cukup', 'lengkap', 'sangat lengkap'],
+        'kuota': ['sedikit', 'sedang', 'banyak'],
+        'jarak': ['dekat', 'sedang', 'jauh']
+    }
+    
+    for category, values in linguistic_map.items():
+        if user_value in values and tempat_value in values:
+            user_idx = values.index(user_value)
+            tempat_idx = values.index(tempat_value)
+            max_distance = len(values) - 1
+            distance = abs(user_idx - tempat_idx)
+            return 1 - (distance / max_distance)
+    
+    return 0.0
+
+def inferensi_mamdani(user_prefrence, tempat_values):
+    bidang_match = 1.0 if user_prefrence['bidang'] == tempat_values['bidang'] else 0.0
+    
+    similarity = {
+        'durasi': hitung_similarity_linguistik(user_prefrence['durasi'], tempat_values['durasi']),
+        'fasilitas': hitung_similarity_linguistik(user_prefrence['fasilitas'], tempat_values['fasilitas']),
+        'kuota': hitung_similarity_linguistik(user_prefrence['kuota'], tempat_values['kuota']),
+        'jarak': hitung_similarity_linguistik(user_prefrence['jarak'], tempat_values['jarak'])
+    }
     
     hasil_tidak_rekomendasi = 0
     hasil_pertimbangkan = 0
     hasil_rekomendasi = 0
     
-    for rule in rules:
-        bidang_matched = rule["kondisi"][0] == fuzzy_bidang
-        durasi_key = rule["kondisi"][1]
-        fasilitas_key = rule["kondisi"][2]
-        kuota_key = rule["kondisi"][3]
-        jarak_key = rule["kondisi"][4]
-        
-        durasi_val = fuzzy_durasi[durasi_key]
-        fasilitas_val = fuzzy_fasilitas[fasilitas_key]
-        kuota_val = fuzzy_kuota[kuota_key]
-        jarak_val = fuzzy_jarak[jarak_key]
-        
-        if not bidang_matched:
-            continue
-        
-        alpha = min(durasi_val, fasilitas_val, kuota_val, jarak_val)
-        
-        if alpha == 0:
-            continue
-            
-        if rule["hasil"] == "Tidak Direkomendasikan":
-            hasil_tidak_rekomendasi = max(hasil_tidak_rekomendasi, alpha)
-        elif rule["hasil"] == "Dipertimbangkan":
-            hasil_pertimbangkan = max(hasil_pertimbangkan, alpha)
-        elif rule["hasil"] == "Direkomendasikan":
-            hasil_rekomendasi = max(hasil_rekomendasi, alpha)
+    if bidang_match == 0:
+        hasil_tidak_rekomendasi = 1.0
+        return {
+            "Tidak Direkomendasikan": hasil_tidak_rekomendasi,
+            "Dipertimbangkan": 0,
+            "Direkomendasikan": 0
+        }
+    
+    similarity_total = sum(similarity.values()) / len(similarity)
+    
+    if similarity_total >= 0.8:
+        hasil_rekomendasi = similarity_total
+    elif similarity_total >= 0.5:
+        hasil_pertimbangkan = similarity_total
+    else:
+        hasil_tidak_rekomendasi = 1 - similarity_total
+    
+    hasil_rekomendasi = min(1.0, hasil_rekomendasi)
+    hasil_pertimbangkan = min(1.0, hasil_pertimbangkan)
+    hasil_tidak_rekomendasi = min(1.0, hasil_tidak_rekomendasi)
+    
+    kriteria_weights = {
+        'durasi': 0.15,
+        'fasilitas': 0.25,
+        'kuota': 0.15,
+        'jarak': 0.45
+    }
+    
+    weighted_similarity = sum(similarity[key] * kriteria_weights[key] for key in similarity)
+    
+    if weighted_similarity >= 0.7:
+        hasil_rekomendasi = weighted_similarity
+        hasil_pertimbangkan = 0.3
+        hasil_tidak_rekomendasi = 0
+    elif weighted_similarity >= 0.4:
+        hasil_rekomendasi = 0
+        hasil_pertimbangkan = weighted_similarity
+        hasil_tidak_rekomendasi = 0.2
+    else:
+        hasil_rekomendasi = 0
+        hasil_pertimbangkan = 0.3
+        hasil_tidak_rekomendasi = 1 - weighted_similarity
     
     return {
         "Tidak Direkomendasikan": hasil_tidak_rekomendasi,
@@ -355,30 +280,30 @@ def inferensi_mamdani(fuzzy_bidang, fuzzy_durasi, fuzzy_fasilitas, fuzzy_kuota, 
 def defuzzifikasi_centroid(inferensi_output, num_points=100):
     x_range = np.linspace(0, 100, num_points)
     
-    membership_values = []
-    for x in x_range:
-        if 0 <= x <= 40:
-            value_tidak = inferensi_output["Tidak Direkomendasikan"]
-            membership_values.append(min(value_tidak, segitiga_membership(x, 0, 20, 40)))
-        elif 40 < x <= 70:
-            value_pertimbangkan = inferensi_output["Dipertimbangkan"]
-            membership_values.append(min(value_pertimbangkan, segitiga_membership(x, 40, 55, 70)))
-        else:
-            value_rekomendasi = inferensi_output["Direkomendasikan"]
-            membership_values.append(min(value_rekomendasi, segitiga_membership(x, 70, 85, 100)))
+    numerator = 0
+    denominator = 0
     
-    numerator = sum(x_range[i] * membership_values[i] for i in range(num_points))
-    denominator = sum(membership_values)
+    for x in x_range:
+        if x <= 40:
+            mu = min(inferensi_output["Tidak Direkomendasikan"], trapesium_membership(x, 0, 10, 30, 40))
+        elif 40 < x <= 70:
+            mu = min(inferensi_output["Dipertimbangkan"], trapesium_membership(x, 40, 50, 60, 70))
+        else:
+            mu = min(inferensi_output["Direkomendasikan"], trapesium_membership(x, 70, 80, 90, 100))
+        
+        if mu > 0:
+            numerator += x * mu
+            denominator += mu
     
     if denominator == 0:
-        return 50
+        return 50  
     
     return numerator / denominator
 
 def get_rekomendasi_label(nilai):
-    if nilai >= 0.75 or nilai >= 70:
+    if nilai >= 0.6 or nilai >= 75:
         return "Direkomendasikan"
-    elif nilai >= 0.60 or nilai >= 40:
+    elif nilai >= 0.5 or nilai >= 40:
         return "Dipertimbangkan"
     else:
         return "Tidak Direkomendasikan"
@@ -404,34 +329,68 @@ def tampilkan_input_user():
     hasil_tempat = cursor.fetchall()
     cursor.close()
 
+    direkomendasikan = []
+    dipertimbangkan = []
+    tidak_direkomendasikan = []
+
+    user_preferences = {
+        'bidang': bidang_user,
+        'durasi': durasi_user,
+        'fasilitas': fasilitas_level_user,
+        'kuota': kuota_user,
+        'jarak': jarak_user
+    }
+
     for tempat in hasil_tempat:
-        # Metode KBRS (Rule-Based)
-        skor_kbrs = hitung_skor_kbrs(bidang_user, durasi_user, fasilitas_level_user, kuota_user, jarak_user, tempat)
+        # Skor KBRS
+        skor_kbrs = hitung_skor_kbrs(
+            bidang_user, durasi_user, fasilitas_level_user, kuota_user, jarak_user, tempat
+        )
+
+        # Fuzzy Mamdani - directly compare user preferences with location values
+        tempat_values = {
+            'bidang': tempat['bidang_pekerjaan'].lower(),
+            'durasi': tempat['label_durasi'].lower(),
+            'fasilitas': tempat['label_fasilitas'].lower(),
+            'kuota': tempat['label_kuota'].lower(),
+            'jarak': tempat['label_jarak'].lower()
+        }
         
-        # Metode Fuzzy Mamdani tradisional
-        fuzzy_bidang = fuzzifikasi_bidang(bidang_user, tempat['bidang_pekerjaan'].lower())
-        fuzzy_durasi = fuzzifikasi_durasi(durasi_user)
-        fuzzy_fasilitas = fuzzifikasi_fasilitas(fasilitas_level_user)
-        fuzzy_kuota = fuzzifikasi_kuota(kuota_user)
-        fuzzy_jarak = fuzzifikasi_jarak(jarak_user)
+        print(f"\nTempat: {tempat['nama_tempat']}")
+        print(f"User durasi: {durasi_user}, Tempat durasi: {tempat_values['durasi']}")
+        print(f"User fasilitas: {fasilitas_level_user}, Tempat fasilitas: {tempat_values['fasilitas']}")
+        print(f"User kuota: {kuota_user}, Tempat kuota: {tempat_values['kuota']}")
+        print(f"User jarak: {jarak_user}, Tempat jarak: {tempat_values['jarak']}")
         
-        inferensi_output = inferensi_mamdani(fuzzy_bidang, fuzzy_durasi, fuzzy_fasilitas, fuzzy_kuota, fuzzy_jarak)
+        # Calculate similarity for visualization
+        similarity = {
+            'bidang': 1.0 if bidang_user == tempat_values['bidang'] else 0.0,
+            'durasi': hitung_similarity_linguistik(durasi_user, tempat_values['durasi']),
+            'fasilitas': hitung_similarity_linguistik(fasilitas_level_user, tempat_values['fasilitas']),
+            'kuota': hitung_similarity_linguistik(kuota_user, tempat_values['kuota']),
+            'jarak': hitung_similarity_linguistik(jarak_user, tempat_values['jarak'])
+        }
+
+        # Run the Mamdani fuzzy inference
+        inferensi_output = inferensi_mamdani(user_preferences, tempat_values)
         nilai_mamdani = defuzzifikasi_centroid(inferensi_output)
         
-        # Normalisasi skor Mamdani ke range 0-1 untuk hybrid
+        print(f"Inferensi output: {inferensi_output}")
+        print(f"Nilai Mamdani: {nilai_mamdani}")
+        
         skor_mamdani_normalized = nilai_mamdani / 100
-        
-        # Menghitung skor hybrid (KBRS + Mamdani)
         hybrid_score = (skor_kbrs + skor_mamdani_normalized) / 2
-        
-        # Menyimpan semua skor ke dalam data tempat
+
+        # Simpan skor dan label
         tempat['skor_kbrs'] = round(skor_kbrs, 2)
         tempat['skor_mamdani'] = round(nilai_mamdani, 2)
         tempat['skor_hybrid'] = round(hybrid_score, 2)
-        
-        # Menentukan label rekomendasi berdasarkan skor hybrid
         tempat['label_rekomendasi'] = get_rekomendasi_label(hybrid_score)
 
+        # Simpan nilai keanggotaan untuk ditampilkan di chart
+        tempat['nilai_keanggotaan'] = similarity
+
+        # Cetak log
         print(f"Tempat: {tempat['nama_tempat']}")
         print(f"Skor KBRS      : {skor_kbrs:.2f}")
         print(f"Skor Mamdani   : {nilai_mamdani:.2f}")
@@ -439,6 +398,21 @@ def tampilkan_input_user():
         print(f"Rekomendasi    : {tempat['label_rekomendasi']}")
         print("-------------------------------------------")
 
+        # Kategorisasi rekomendasi
+        if tempat['label_rekomendasi'] == 'Direkomendasikan':
+            direkomendasikan.append(tempat)
+        elif tempat['label_rekomendasi'] == 'Dipertimbangkan':
+            dipertimbangkan.append(tempat)
+        else:
+            tidak_direkomendasikan.append(tempat)
+
     hasil_tempat_sorted = sorted(hasil_tempat, key=lambda x: x['skor_hybrid'], reverse=True)
     flash('Perhitungan KBRS + Fuzzy Mamdani selesai', 'info')
-    return render_template('pilih_pkl.html', data_tempat_pkl=hasil_tempat_sorted)
+
+    return render_template(
+        'pilih_pkl.html',
+        data_tempat_pkl=hasil_tempat_sorted,
+        direkomendasikan=direkomendasikan,
+        dipertimbangkan=dipertimbangkan,
+        tidak_direkomendasikan=tidak_direkomendasikan
+    )

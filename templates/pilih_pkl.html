@@ -1,35 +1,27 @@
-{% extends "base.html" %} {% block content %} {% if session.get('role') ==
-'siswa' %} {% include "navbar/navbar_login.html" %} {% else %} {% include
-"navbar/navbar.html" %} {% endif %} {% include "modal/modal_filter.html" %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/pilih_pkl.css') }}"
-/>
+{% extends "base.html" %}
+{% block content %}
+{% if session.get('role') == 'siswa' %}
+  {% include "navbar/navbar_login.html" %}
+{% else %}
+  {% include "navbar/navbar.html" %}
+{% endif %}
+{% include "modal/modal_filter.html" %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pilih_pkl.css') }}">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<!-- SEARCH & FILTER -->
 <div class="card-search">
   <div class="container">
     <br />
     <div class="card-search-2">
       <form class="d-flex" role="search">
         <div class="input-group me-2">
-          <input
-            type="search"
-            class="form-control"
-            placeholder="Cari tempat..."
-            aria-label="Search"
-          />
-          <button class="btn btn-search" type="button">
-            <i class="bi bi-search"></i>
-          </button>
+          <input type="search" class="form-control" placeholder="Cari tempat..." aria-label="Search" />
+          <button class="btn btn-search" type="button"><i class="bi bi-search"></i></button>
         </div>
         <div class="dropdown-center">
-          <button
-            class="btn btn-filter"
-            type="button"
-            data-bs-toggle="modal"
-            data-bs-target="#staticBackdrop"
-          >
+          <button class="btn btn-filter" type="button" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
             <i class="bi bi-filter"></i> Filter
           </button>
         </div>
@@ -38,6 +30,7 @@
   </div>
 </div>
 
+<!-- LIST TEMPAT -->
 <div class="container mt-5">
   {% if data_tempat_pkl|length == 0 %}
   <div class="alert alert-warning text-center" role="alert">
@@ -47,70 +40,84 @@
   <div class="row">
     {% for tempat in data_tempat_pkl %}
     <div class="col-12 col-sm-6 col-md-6 col-lg-4 mb-4">
-      <div class="card h-100 shadow-sm">
-        <img
-          src="{{ url_for('static', filename='img/' ~ tempat.foto) }}"
-          class="card-img-top"
-          alt="Foto Tempat"
-          style="height: 180px; object-fit: cover"
-        />
+      <div class="card h-100 shadow-sm position-relative">
+        <!-- Label Rekomendasi di pojok kiri atas -->
+        <div class="position-absolute top-0 start-0 m-2">
+          <span class="badge
+            {% if tempat.label_rekomendasi == 'Direkomendasikan' %}
+              bg-success
+            {% elif tempat.label_rekomendasi == 'Dipertimbangkan' %}
+              bg-warning text-dark
+            {% else %}
+              bg-danger
+            {% endif %}"
+            title="Fasilitas {{ tempat.label_fasilitas }}, Kuota {{ tempat.label_kuota }}, Jarak {{ tempat.label_jarak }}">
+            {{ tempat.label_rekomendasi }}
+          </span>
+        </div>
+
+        <img src="{{ url_for('static', filename='img/' ~ tempat.foto) }}" class="card-img-top" alt="Foto Tempat"
+          style="height: 180px; object-fit: cover" />
         <div class="card-body">
           <h5 class="card-title fw-bold">{{ tempat.nama_tempat }}</h5>
           <div class="my-3">
-            <p class="card-text mb-1">
-              <i class="bi bi-building me-2"></i>Institusi: {{ tempat.institusi
-              }}
-            </p>
-            <p class="card-text mb-1">
-              <i class="bi bi-briefcase me-2"></i>Bidang: {{
-              tempat.bidang_pekerjaan }}
-            </p>
-            <p class="card-text mb-1">
-              <i class="bi bi-people me-2"></i>Kuota: {{ tempat.kuota }}
-            </p>
-            <p class="card-text mb-1">
-              <i class="bi bi-geo-alt me-2"></i>Jarak: {% if tempat.jarak is not
-              none %} {{ tempat.jarak }} km {% else %} Tidak tersedia {% endif
-              %}
-            </p>
-            <p class="card-text mb-1">
-              <i class="bi bi-calendar-week me-2"></i>Durasi: {{ tempat.durasi
-              }}
-            </p>
+            <p class="card-text mb-1"><i class="bi bi-building me-2"></i>Institusi: {{ tempat.institusi }}</p>
+            <p class="card-text mb-1"><i class="bi bi-briefcase me-2"></i>Bidang: {{ tempat.bidang_pekerjaan }}</p>
+            <p class="card-text mb-1"><i class="bi bi-people me-2"></i>Kuota: {{ tempat.kuota }}</p>
+            <p class="card-text mb-1"><i class="bi bi-geo-alt me-2"></i>Jarak: {% if tempat.jarak is not none %}{{ tempat.jarak }} km{% else %}Tidak tersedia{% endif %}</p>
+            <p class="card-text mb-1"><i class="bi bi-calendar-week me-2"></i>Durasi: {{ tempat.durasi }}</p>
           </div>
 
-          {% if tempat.skor_kbrs is defined and tempat.skor_mamdani is defined
-          and tempat.skor_hybrid is defined %}
+          {% if tempat.skor_kbrs is defined and tempat.skor_mamdani is defined and tempat.skor_hybrid is defined %}
           <div class="mt-3 p-2 bg-light rounded">
-            <div class="text-center mb-2">
-              <span
-                class="badge bg-{{ 'success' if tempat.label_rekomendasi == 'Direkomendasikan' else 'warning' if tempat.label_rekomendasi == 'Dipertimbangkan' else 'danger' }}"
-              >
-                {{ tempat.label_rekomendasi }}
-              </span>
-            </div>
             <div class="text-muted small">
-              <p class="mb-1">
-                Skor KBRS:
-                <strong>{{ "%.2f"|format(tempat.skor_kbrs) }}</strong>
-              </p>
-              <p class="mb-1">
-                Skor Fuzzy Mamdani:
-                <strong>{{ "%.2f"|format(tempat.skor_mamdani) }}</strong>
-              </p>
-              <p class="mb-1">
-                Skor Hybrid:
-                <strong>{{ "%.2f"|format(tempat.skor_hybrid) }}</strong>
-              </p>
+              <p class="mb-1">Skor KBRS: <strong>{{ "%.2f"|format(tempat.skor_kbrs) }}</strong></p>
+              <p class="mb-1">Skor Fuzzy Mamdani: <strong>{{ "%.2f"|format(tempat.skor_mamdani) }}</strong></p>
+              <p class="mb-1">Skor Hybrid: <strong>{{ "%.2f"|format(tempat.skor_hybrid) }}</strong></p>
+            </div>
+
+            <div class="mb-2 mt-2">
+              <canvas id="chart_{{ tempat.id }}" width="100" height="60"></canvas>
+              <script>
+                const ctx_{{ tempat.id }} = document.getElementById('chart_{{ tempat.id }}').getContext('2d');
+                new Chart(ctx_{{ tempat.id }}, {
+                  type: 'bar',
+                  data: {
+                    labels: ['Bidang', 'Durasi', 'Fasilitas', 'Kuota', 'Jarak'],
+                    datasets: [{
+                      label: 'μ(x)',
+                      data: [
+                        {{ tempat.nilai_keanggotaan.bidang|default(0) }},
+                        {{ tempat.nilai_keanggotaan.durasi|default(0) }},
+                        {{ tempat.nilai_keanggotaan.fasilitas|default(0) }},
+                        {{ tempat.nilai_keanggotaan.kuota|default(0) }},
+                        {{ tempat.nilai_keanggotaan.jarak|default(0) }}
+                      ],
+                      backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                    }]
+                  },
+                  options: {
+                    responsive: true,
+                    plugins: {
+                      legend: { display: false },
+                      tooltip: { enabled: true }
+                    },
+                    scales: {
+                      y: {
+                        beginAtZero: true,
+                        max: 1,
+                        title: { display: true, text: 'Derajat Keanggotaan (μ)' }
+                      }
+                    }
+                  }
+                });
+              </script>
             </div>
           </div>
           {% endif %}
 
           <div class="mt-3">
-            <a
-              href="{{ url_for('tempat_pkl_siswa_routes.detail_tempat_pkl', id=tempat.id) }}"
-              class="btn btn-lihat-detail w-100"
-            >
+            <a href="{{ url_for('tempat_pkl_siswa_routes.detail_tempat_pkl', id=tempat.id) }}" class="btn btn-lihat-detail w-100">
               <i class="bi bi-info-circle me-2"></i>Lihat Detail
             </a>
           </div>
@@ -122,4 +129,5 @@
   {% endif %}
 </div>
 
-{% include "footer/footer.html" %} {% endblock %}
+{% include "footer/footer.html" %}
+{% endblock %}
